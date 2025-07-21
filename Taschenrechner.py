@@ -2,10 +2,12 @@ import numpy as np
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
+
+import sympy
 from sympy import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-
+from matplotlib.patches import Polygon
 
 def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
     y = ((a2 * c1) - (a1 * c2)) / ((a2 * b1) - (a1 * b2))
@@ -14,12 +16,10 @@ def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
 
 
 def dreimaldrei(a1, b1, c1, a2, b2, c2, a3, b3, c3, d1, d2, d3, anzeige):
-    z = (a1 * (b2 * d3 - b3 * d2) - b1 * (a2 * d3 - a3 * d2) + d1 * (a2 * b3 - a3 * b2)) / (
-            a1 * (b2 * c3 - b3 * c2) - b1 * (a2 * c3 - a3 * c2) + c1 * (a2 * b3 - a3 * b2))
-    y = (a1 * (d2 * c3 - d3 * c2) - d1 * (a2 * c3 - a3 * c2) + c1 * (a2 * d3 - a3 * d2)) / (
-            a1 * (b2 * c3 - b3 * c2) - b1 * (a2 * c3 - a3 * c2) + c1 * (a2 * b3 - a3 * b2))
-    x = (d1 * (b2 * c3 - b3 * c2) - b1 * (d2 * c3 - d3 * c2) + c1 * (d2 * b3 - d3 * b2)) / (
-            a1 * (b2 * c3 - b3 * c2) - b1 * (a2 * c3 - a3 * c2) + c1 * (a2 * b3 - a3 * b2))
+    rest = (a1 * (b2 * c3 - b3 * c2) - b1 * (a2 * c3 - a3 * c2) + c1 * (a2 * b3 - a3 * b2))
+    z = (a1 * (b2 * d3 - b3 * d2) - b1 * (a2 * d3 - a3 * d2) + d1 * (a2 * b3 - a3 * b2)) / rest
+    y = (a1 * (d2 * c3 - d3 * c2) - d1 * (a2 * c3 - a3 * c2) + c1 * (a2 * d3 - a3 * d2)) / rest
+    x = (d1 * (b2 * c3 - b3 * c2) - b1 * (d2 * c3 - d3 * c2) + c1 * (d2 * b3 - d3 * b2)) / rest
     anzeige.insert(END, f"a ist {x} ,b ist {y} und c ist {z}")
 
 
@@ -151,6 +151,56 @@ def kurvendiskussion(funktion, anzeige):
     symmetrien(funktion, anzeige)
 
 
+def aufleitung(funktion_expr, n_aufleitung_int, anzeige):
+    x = Symbol("x")
+    aufg_funktion = funktion_expr
+    for i in range(n_aufleitung_int):
+        aufg_funktion = aufg_funktion.integrate(x)
+
+    if anzeige == "a":
+        pass
+    else:
+        anzeige.insert(END, f"{n_aufleitung_int}.Aufgeleitete Funktion:{aufg_funktion}" + "\n")
+    return aufg_funktion
+
+def integrale(funktion, anzeige, a,b):
+    x = Symbol("x")
+    area = sympy.integrate(funktion, (x,a,b))
+    anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
+
+def vektorgeometrie(values, anzeige):
+    def vektoren(values, anzeige):
+
+        if values[2] == '':
+            for i in range(2):
+                punktsprünge = 1
+                non_empty_values = [v for v in values if v != '']
+                int_values = [int(v) for v in non_empty_values]
+                durchgänge = len(int_values)
+                gelistete_vektoren = []
+                while punktsprünge > durchgänge:
+                    neue_liste = []
+                    for i in range(2):
+                        neue_liste.append(int_values[i])
+                    gelistete_vektoren.append(neue_liste)
+                    durchgänge = durchgänge + 2
+                print(gelistete_vektoren)
+
+        else:
+            punktsprünge = 1
+            non_empty_values = [v for v in values if v != '']
+            int_values = [int(v) for v in non_empty_values]
+            durchgänge = len(int_values)
+            gelistete_vektoren = []
+            while punktsprünge > durchgänge:
+                neue_liste = []
+                for i in range(3):
+                    neue_liste.append(int_values[i])
+                gelistete_vektoren.append(neue_liste)
+                durchgänge = durchgänge + 3
+            print(gelistete_vektoren)
+
+
 
 class tkinterApp(tk.Tk):
 
@@ -171,7 +221,7 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8):
+        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -253,8 +303,10 @@ class Page2(tk.Frame):
 
         button2.grid(row=2, column=1, padx=10, pady=10)
 
+        button3 = Button(self, height=2, width=20, text="Integrale", command=lambda: controller.show_frame(Page9))
+        button3.grid(row=3, column=1, padx=10, pady=10)
 
-# Vektoren Übersicht
+# Vektoren
 class Page3(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -263,6 +315,44 @@ class Page3(tk.Frame):
 
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
         button1.grid(row=1, column=1, padx=10, pady=10)
+
+        self.entries_punkte = []
+
+        # Koeffizienten-Labels in der Gleichung
+        labels = ["x", "y", "z", ""]
+
+
+        # Zeilen: erste und zweite Gleichung
+        for col in range(4):
+            ttk.Label(self, text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", "vierter Punkt, D"][col]}").grid(row=2, column=2 + col, padx=10, pady=10)
+
+            for row in range(3):
+                # Textfeld für Koeffizienten a, b und Ergebnis
+                entry = tk.Text(self, height=1, width=5)
+                entry.grid(row=row + 3, column=2 + col, padx=10, pady=10, sticky="w")
+                self.entries_punkte.append(entry)
+
+                if labels[col]:  # Falls Text vorhanden ist ("" für Ergebnis-Feld)
+                    ttk.Label(self, text=labels[row]).grid(row=row + 3, column=1, padx=10, pady=10, sticky="e")
+
+        operation = tk.Text(self, height=1, width=15)
+        operation.grid(row=3, column=8, padx=10, pady=10, sticky="e")
+
+        def solve_and_show():
+            values = [e.get("1.0", "end-1c").strip() for e in self.entries_punkte]
+            non_empty_values = [v for v in values if v != '']
+            print (values)
+            int_values = [int(v) for v in non_empty_values]
+            print(int_values)
+            vektorgeometrie(values, anzeige)
+
+
+
+        values_button = ttk.Button(self, text="solv", command=solve_and_show)
+        values_button.grid(row=3, column=8, padx=10, pady=10, sticky="w")
+
+        anzeige = Text(self, height=5, width=25, bg="light cyan")
+        anzeige.grid(row=4, column=8, padx=10, pady=10)
 
 
 # 2x2
@@ -397,7 +487,7 @@ class Page6(tk.Frame):
         anzeige = Text(self, height=5, width=25, bg="light cyan")
         anzeige.grid(row=3, column=8, padx=10, pady=10)
 
-
+# kurvendiskussion
 class Page7(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -440,14 +530,15 @@ class Page7(tk.Frame):
                 # Zugriff auf Page8 über den Controller
                 page8 = self.controller.frames[Page8]
                 self.controller.show_frame(Page8)
-                page8.plot(funktion_expr)
+                d_oder_i = "diff"
+                page8.plot(funktion_expr, d_oder_i)
             except Exception as e:
                 print(f"Fehler beim Plotten: {e}")
 
         plot_button = ttk.Button(self, text="Plot", command=anplot)
         plot_button.grid(row=4, column=2, padx=10, pady=10)
 
-
+# funktionsgraph
 class Page8(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -462,7 +553,7 @@ class Page8(tk.Frame):
         self.plot_frame = tk.Frame(self)
         self.plot_frame.pack(fill=tk.BOTH, expand=True)
 
-    def plot(self, funktion_expr):
+    def plot(self, funktion_expr, d_oder_i, *args, **kwargs):
         # Clear previous plot if it exists
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
@@ -475,7 +566,6 @@ class Page8(tk.Frame):
         x_sym = Symbol('x')
         f = lambdify(x_sym, funktion_expr, 'numpy')
 
-        # Generate x values
         x_vals = np.linspace(-30, 30, 400)
         try:
             y_vals = f(x_vals)
@@ -483,6 +573,15 @@ class Page8(tk.Frame):
             # Falls die Funktion nicht überall definiert ist
             y_vals = np.vectorize(lambda x: f(x) if x != 0 else np.nan)(x_vals)
 
+        if d_oder_i == "int":
+            ix = np.linspace(args,kwargs)
+            iy = f(ix)
+            verts = [(args, 0), *zip(ix, iy), (kwargs, 0)]
+            poly = Polygon(verts, facecolor='0.9', edgecolor='0.5')
+            plot1.add_patch(poly)
+
+            plot1.text(0.5 * (args + kwargs), 30, r"$\int_a^b f(x)\mathrm{d}x$",
+                           horizontalalignment='center', fontsize=20)
         # Plot the function
         plot1.plot(x_vals, y_vals)
         plot1.grid(True)
@@ -499,108 +598,68 @@ class Page8(tk.Frame):
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
 
+class Page9(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller  # Speichern des Controllers als Instanzvariable
+        label = ttk.Label(self, text="Integrale")
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        funktion_label = ttk.Label(self, text="Funktion")
+        funktion_label.grid(row=2, column=1, padx=10, pady=10)
+        self.funktion = tk.Text(self, height=3, width=20)
+        self.funktion.grid(row=3, column=1, padx=10, pady=10)
+
+        n_aufleitung_label = ttk.Label(self, text="Anzahl Aufleitungen")
+        n_aufleitung_label.grid(row=2, column=5, padx=10, pady=10)
+        self.n_aufleitung = tk.Entry(self)
+        self.n_aufleitung.grid(row=3, column=5, padx=10, pady=10)
+
+        range_label = ttk.Label(self, text="Von wo bis wo, Format: (a,b)")
+        range_label.grid(row=2, column=6, padx=10, pady=10)
+        self.range = tk.Entry(self)
+        self.range.grid(row=3, column=6, padx=10, pady=10)
+
+        def solve_and_show():
+            funktion = self.funktion.get("1.0", "end-1c")
+            n_aufleitung_int = int(self.n_aufleitung.get())
+            range_str = self.range.get().strip("()")
+            a_str, b_str = range_str.split(',')
+            a = int(a_str.strip())
+            b = int(b_str.strip())
+
+            funktion_expr = sympify(funktion)
+
+            aufleitung(funktion_expr, n_aufleitung_int, anzeige)
+            integrale(funktion_expr, anzeige, a,b)
+            return funktion_expr, a, b
+
+        values_button = ttk.Button(self, text="solv", command=solve_and_show)
+        values_button.grid(row=2, column=8, padx=10, pady=10)
+
+        anzeige = Text(self, height=10, width=40, bg="light cyan")
+        anzeige.grid(row=3, column=8, padx=10, pady=10)
+
+        def anplot():
+            try:
+                funktion_expr, a, b = solve_and_show()
+
+                # Zugriff auf Page8 über den Controller
+                page8 = self.controller.frames[Page8]
+                self.controller.show_frame(Page8)
+                d_oder_i = "int"
+                page8.plot(funktion_expr, d_oder_i, a, b)
+            except Exception as e:
+                print(f"Fehler beim Plotten: {e}")
+
+        plot_button = ttk.Button(self, text="Plot", command=anplot)
+        plot_button.grid(row=4, column=2, padx=10, pady=10)
 # Driver Code
 app = tkinterApp()
 app.mainloop()
 
-"""gleichungssystemswitch = input("Ein Gleichungssystem lösen? (ja oder nein)")
-if gleichungssystemswitch.lower() == "ja":
-    zweimalzweiswitch = input("Ein 2x2 Gleichungssystem lösen? (ja oder nein)")
-    if zweimalzweiswitch.lower() == "ja":
-        zweimalzwei()
-    dreimaldreiswitch = input("Ein 3x3 Gleichungssystem lösen? (ja oder nein)")
-    if dreimaldreiswitch.lower() == "ja":
-        dreimaldrei()
-    viermalvierswitch = input("Ein 4x4 Gleichungssystem lösen? (ja oder nein)")
-    if viermalvierswitch.lower() == "ja":
-        viermalvier()
-
-nullstellenswitch = input("Die Nullstellen einer Funktion berechnen? (ja oder nein)")
-if nullstellenswitch.lower() == "ja":       #bei dem gibt es irgendwo noch Fehler
-    a = int(input("Was ist a"))
-    b = int(input("Was ist b"))
-    c = int(input("Was ist c"))
-    d = int(input("Was ist d"))
-    k = int(input("Was ergibt diese Funktion"))
-
-    e = d-k
 
 
-    fig, ax = plt.subplots(figsize=(15, 6))
-    ax.set(xlim=(-50, 50), ylim=(-50, 50), aspect='equal')
-
-
-    # Add coordinate axes
-    ax.axhline(0, color='black', linewidth=0.5)  # x-axis
-    ax.axvline(0, color='black', linewidth=0.5)  # y-axis
-
-
-
-    if a > 0 or a < 0:
-        kubisch(a,b,c,e)
-        x = np.linspace(-10, 10, 400)
-        y = (a * (x ** 3)) + (b * (x ** 2)) + (c * x) + d
-    elif 1*(10*-10) < a < 1(10**-9):
-        quadratisch(b,c,d)
-        x = np.linspace(-10, 10, 400)
-        y = (b * (x ** 2)) + (c * x) + e
-    elif 1*(10*-10) < a < 1(10*-9) and 1(10*-10) < b < 1(10**-9):
-        linear(k, c, d)
-        x = np.linspace(-10, 10, 400)
-        y = (c * x) + d
-
-    plt.plot(x, y)
-    plt.tight_layout()
-    plt.show()
-
-ebenen_und_kreuz_switch = input("Willst du die EBENE und/oder das KREUZPRODUKT wissen? (AB und AC Vektoren ebenfalls enthalten), ja oder nein")
-if ebenen_und_kreuz_switch.lower() == "ja":
-    Ax = int(input("x von a"))
-    Ay = int(input("y von a"))
-    Az = int(input("z von a"))
-
-    Bx = int(input("x von b"))
-    By = int(input("y von b"))
-    Bz = int(input("z von b"))
-
-    Cx = int(input("x von c"))
-    Cy = int(input("y von c"))
-    Cz = int(input("z von c"))
-
-    AB_switch = input("willst du AB")
-    AC_switch = input("willst du AC")
-
-    KREUZ_switch = input("willst du das Kreuzprodukt")
-    A = (Ax, Ay, By)
-    B = (Bx, By, Bz)
-    C = (Cx, Cy, Cz)
-
-    ABx = Bx - Ax
-    ABy = By - Ay
-    ABz = Bz - Az
-
-    ACx = Cx - Ax
-    ACy = Cy - Ay
-    ACz = Cz - Az
-
-    AB = (ABx, ABy, ABz)
-    AC = (ACx, ACy, ACz)
-
-    if AB_switch.lower() == "ja":
-        print(AB, "das ist der AB Vektor")
-    if AC_switch.lower() == "ja":
-        print(AC, "das ist der AC Vektor")
-
-
-    KREUZ = ((ABy * ACz) - (ABz * ACy), (ABz * ACx) - (ABx * ACz), (ABx * ACy) - (ABy * ACx))
-
-    if KREUZ_switch.lower() == "ja":
-        print(KREUZ, "das ist das KREUZPRODUKT")
-
-    KREUZx = (ABy * ACz) - (ABz * ACy)
-    KREUZy = (ABz * ACx) - (ABx * ACz)
-    KREUZz = (ABx * ACy) - (ABy * ACx)
-
-    d = -((KREUZx*Ax)+(KREUZy*Ay)+(KREUZz*Az))
-
-    print("Ebene ist", KREUZx, "x+", KREUZy, "y+", KREUZz, "z+", d)"""
