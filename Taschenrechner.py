@@ -168,38 +168,65 @@ def integrale(funktion, anzeige, a,b):
     area = sympy.integrate(funktion, (x,a,b))
     anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
 
-def vektorgeometrie(values, anzeige):
-    def vektoren(values, anzeige):
+def vektorgeometrie(values, float_values, anzeige, befehl):
+    print(values, float_values)
 
-        if values[2] == '':
-            for i in range(2):
-                punktspruenge = 1
-                non_empty_values = [v for v in values if v != '']
-                int_values = [int(v) for v in non_empty_values]
-                durchgaenge = len(int_values)
-                gelistete_vektoren = []
-                while punktspruenge > durchgaenge:
-                    neue_liste = []
-                    for i in range(2):
-                        neue_liste.append(int_values[i])
-                    gelistete_vektoren.append(neue_liste)
-                    durchgaenge = durchgaenge + 2
-                print(gelistete_vektoren)
+    def vektoren_einlesen(values, float_values):
+        a_vektor = b_vektor = c_vektor = d_vektor = None
+
+        if all(v[2] == '' for v in values[:4]):         # nachfolgende Befehle können natürlich vereinfacht werden
+           if len(float_values[0]) > 0:                 # aber so ist es klar und Einzeiler sind nichts für mich
+               a_vektor = np.array(float_values[0])
+           if len(float_values[1]) > 0:
+               b_vektor = np.array(float_values[1])
+           if len(float_values[2]) > 0:
+               c_vektor = np.array(float_values[2])
+           if len(float_values[3]) > 0:
+               d_vektor = np.array(float_values[3])
+           return a_vektor, b_vektor, c_vektor, d_vektor
 
         else:
-            punktspruenge = 1
-            non_empty_values = [v for v in values if v != '']
-            int_values = [int(v) for v in non_empty_values]
-            durchgaenge = len(int_values)
-            gelistete_vektoren = []
-            while punktspruenge > durchgaenge:
-                neue_liste = []
-                for i in range(3):
-                    neue_liste.append(int_values[i])
-                gelistete_vektoren.append(neue_liste)
-                durchgaenge = durchgaenge + 3
-            print(gelistete_vektoren)
+            if len(float_values[0]) > 0:
+                a_vektor = np.array(float_values[0])
+            if len(float_values[1]) > 0:
+                b_vektor = np.array(float_values[1])
+            if len(float_values[2]) > 0:
+                c_vektor = np.array(float_values[2])
+            if len(float_values[3]) > 0:
+                d_vektor = np.array(float_values[3])
+            return a_vektor, b_vektor, c_vektor, d_vektor
 
+    a_vektor, b_vektor, c_vektor, d_vektor = vektoren_einlesen(values, float_values)
+    print(a_vektor, b_vektor, c_vektor, d_vektor)
+
+    def skalarprodukt(vektor1, vektor2):
+        skalarprodukt = 0
+        for i in range(len(vektor1)):
+            skalarprodukt = skalarprodukt + vektor1[i] * vektor2[i]
+
+        return skalarprodukt
+
+    def vektor_produkt(vektor1, vektor2):
+        kreuzprodukt = np.cross(vektor1, vektor2)
+        return kreuzprodukt
+
+    def winkel(vektor1, vektor2):
+        betrag_vektor1 = np.linalg.norm(vektor1)
+        betrag_vektor2 = np.linalg.norm(vektor2)
+
+        skalarprodukt = 0
+        for i in range(len(vektor1)):
+            skalarprodukt = skalarprodukt + vektor1[i] * vektor2[i]
+
+        cos_winkel =  skalarprodukt/ (betrag_vektor1 * betrag_vektor2)
+        cos_winkel = np.clip(cos_winkel, -1.0, 1.0)
+        winkel_rad = np.arccos(cos_winkel)
+        winkel_deg = np.rad2deg(winkel_rad)
+
+        return winkel_deg
+
+    def ebene_zwei(vektor1, vektor2):
+        kreuzprodukt = np.cross(vektor1, vektor2)
 
 
 class tkinterApp(tk.Tk):
@@ -298,7 +325,7 @@ class Page2(tk.Frame):
 
         button1.grid(row=1, column=1, padx=10, pady=10)
 
-        button2 = Button(self, height=2, width=20, text="Kurvendiskussion",
+        button2 = Button(self, height=2, width=20, text="Kürvendiskussion",
                              command=lambda: controller.show_frame(Page7))
 
         button2.grid(row=2, column=1, padx=10, pady=10)
@@ -316,36 +343,53 @@ class Page3(tk.Frame):
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
-        self.entries_punkte = []
+        self.alle_cords = ([
+            [],
+            [],
+            [],
+            []
+        ])
+
 
         # Koeffizienten-Labels für die Vektoren
         labels = ["x", "y", "z", None]
 
-
-        # vier Punkte
+        # vier Punkte Überschrift
         for col in range(4):
             ttk.Label(self, text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", "vierter Punkt, D"][col]}").grid(row=2, column=2 + col, padx=10, pady=10)
-
             for row in range(3):
-                # Textfeld für Koeffizienten a, b und Ergebnis
-                entry = tk.Text(self, height=1, width=5)
-                entry.grid(row=row + 3, column=2 + col, padx=10, pady=10, sticky="w")
-                self.entries_punkte.append(entry)
-
-                if labels[col]:  # Falls Text vorhanden ist ("" für Ergebnis-Feld)
+                if labels[col]:  # Falls Text vorhanden, dann labels setzen
                     ttk.Label(self, text=labels[row]).grid(row=row + 3, column=1, padx=10, pady=10, sticky="e")
+
+        # Textfelder für A
+        for col in range(4):
+            for row in range(3):
+                koordinaten = tk.Text(self, height=1, width=5)
+                koordinaten.grid(row=row + 3, column=2 + col, padx=10, pady=10, sticky="w")
+                einzelner_vektor = self.alle_cords[col]
+                einzelner_vektor.append(koordinaten)
 
         operation = tk.Text(self, height=1, width=15)
         operation.grid(row=3, column=8, padx=10, pady=10, sticky="e")
 
-        def solve_and_show():
-            values = [e.get("1.0", "end-1c").strip() for e in self.entries_punkte]
-            non_empty_values = [v for v in values if v != '']
-            print (values)
-            float_values = [float(v) for v in non_empty_values]
-            print(float_values)
-            vektorgeometrie(values, anzeige)
+        ttk.Label(self, text="Operation").grid(row=2, column=8, padx=10, pady=10)
 
+        def solve_and_show():
+            # Hilfsfunktion: liest Textfelder -> Strings -> filtert leere -> wandelt in float
+            def parse_coords(entries):
+                cords = [e.get("1.0", "end-1c").strip() for e in entries]
+                nicht_leere = [v for v in cords if v]
+                float_werte = [float(v) for v in nicht_leere]
+                return cords, float_werte
+
+            # Für alle vier Koordinatengruppen
+            results = [parse_coords(group) for group in self.alle_cords]
+
+            # cords = Strings, floats = Floats (jeweils Liste von 4 Listen)
+            cords, floats = zip(*results)
+
+            befehl = operation.get("1.0", "end-1c")
+            vektorgeometrie(cords, floats, anzeige, befehl)
 
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
@@ -492,7 +536,7 @@ class Page7(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Kurven diskutieren")
+        label = ttk.Label(self, text="Kürven diskutieren")
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
