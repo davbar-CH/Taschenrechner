@@ -173,31 +173,31 @@ def vektorgeometrie(values, anzeige):
 
         if values[2] == '':
             for i in range(2):
-                punktsprünge = 1
+                punktspruenge = 1
                 non_empty_values = [v for v in values if v != '']
                 int_values = [int(v) for v in non_empty_values]
-                durchgänge = len(int_values)
+                durchgaenge = len(int_values)
                 gelistete_vektoren = []
-                while punktsprünge > durchgänge:
+                while punktspruenge > durchgaenge:
                     neue_liste = []
                     for i in range(2):
                         neue_liste.append(int_values[i])
                     gelistete_vektoren.append(neue_liste)
-                    durchgänge = durchgänge + 2
+                    durchgaenge = durchgaenge + 2
                 print(gelistete_vektoren)
 
         else:
-            punktsprünge = 1
+            punktspruenge = 1
             non_empty_values = [v for v in values if v != '']
             int_values = [int(v) for v in non_empty_values]
-            durchgänge = len(int_values)
+            durchgaenge = len(int_values)
             gelistete_vektoren = []
-            while punktsprünge > durchgänge:
+            while punktspruenge > durchgaenge:
                 neue_liste = []
                 for i in range(3):
                     neue_liste.append(int_values[i])
                 gelistete_vektoren.append(neue_liste)
-                durchgänge = durchgänge + 3
+                durchgaenge = durchgaenge + 3
             print(gelistete_vektoren)
 
 
@@ -318,11 +318,11 @@ class Page3(tk.Frame):
 
         self.entries_punkte = []
 
-        # Koeffizienten-Labels in der Gleichung
-        labels = ["x", "y", "z", ""]
+        # Koeffizienten-Labels für die Vektoren
+        labels = ["x", "y", "z", None]
 
 
-        # Zeilen: erste und zweite Gleichung
+        # vier Punkte
         for col in range(4):
             ttk.Label(self, text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", "vierter Punkt, D"][col]}").grid(row=2, column=2 + col, padx=10, pady=10)
 
@@ -342,8 +342,8 @@ class Page3(tk.Frame):
             values = [e.get("1.0", "end-1c").strip() for e in self.entries_punkte]
             non_empty_values = [v for v in values if v != '']
             print (values)
-            int_values = [int(v) for v in non_empty_values]
-            print(int_values)
+            float_values = [float(v) for v in non_empty_values]
+            print(float_values)
             vektorgeometrie(values, anzeige)
 
 
