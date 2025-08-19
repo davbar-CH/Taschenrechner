@@ -218,7 +218,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
         for i in range(len(vektor1)):
             skalarprodukt = skalarprodukt + vektor1[i] * vektor2[i]
 
-        cos_winkel =  skalarprodukt/ (betrag_vektor1 * betrag_vektor2)
+        cos_winkel = skalarprodukt / (betrag_vektor1 * betrag_vektor2)
         cos_winkel = np.clip(cos_winkel, -1.0, 1.0)
         winkel_rad = np.arccos(cos_winkel)
         winkel_deg = np.rad2deg(winkel_rad)
@@ -227,6 +227,13 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 
     def ebene_zwei(vektor1, vektor2):
         kreuzprodukt = np.cross(vektor1, vektor2)
+        d = np.linalg.solve(kreuzprodukt, 0)
+        try:
+            ebene_zwei = [f"x:{kreuzprodukt[0]} y:{kreuzprodukt[1]} z:{kreuzprodukt[2]} + {d}"]
+            return ebene_zwei
+        except IndexError:
+            print("Keine z-Koordinate")
+
 
 
 class tkinterApp(tk.Tk):
