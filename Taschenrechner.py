@@ -2,7 +2,7 @@ import numpy as np
 from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
-
+from itertools import permutations
 import sympy
 from sympy import *
 from matplotlib.figure import Figure
@@ -199,6 +199,24 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
     a_vektor, b_vektor, c_vektor, d_vektor = vektoren_einlesen(values, float_values)
     print(a_vektor, b_vektor, c_vektor, d_vektor)
 
+    orts_vektoren = [
+        a_vektor,
+        b_vektor,
+        c_vektor,
+        d_vektor
+    ]
+
+    differenzen = [(i, j, v1 - v2)
+                   for (i, v1), (j, v2) in permutations(enumerate(orts_vektoren, start=1), 2)]
+
+
+    vektoren_kombi = {f"{idx1}-{idx2}": diff for idx1, idx2, diff in differenzen}
+    print(vektoren_kombi)
+
+    # to do: shitload of regex expressions https://www.geeksforgeeks.org/python/python-regex/
+
+
+
     def skalarprodukt(vektor1, vektor2):
         skalarprodukt = 0
         for i in range(len(vektor1)):
@@ -227,7 +245,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 
     def ebene_zwei(vektor1, vektor2):
         kreuzprodukt = np.cross(vektor1, vektor2)
-        d = np.linalg.solve(kreuzprodukt, 0)
+        d = -np.dot(kreuzprodukt, 0)
         try:
             ebene_zwei = [f"x:{kreuzprodukt[0]} y:{kreuzprodukt[1]} z:{kreuzprodukt[2]} + {d}"]
             return ebene_zwei
