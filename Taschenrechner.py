@@ -8,7 +8,7 @@ from sympy import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.patches import Polygon
-
+import re
 def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
     y = ((a2 * c1) - (a1 * c2)) / ((a2 * b1) - (a1 * b2))
     x = (c1 - b1 * y) / a1
@@ -169,7 +169,7 @@ def integrale(funktion, anzeige, a,b):
     anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
 
 def vektorgeometrie(values, float_values, anzeige, befehl):
-    print(values, float_values)
+
 
     def vektoren_einlesen(values, float_values):
         a_vektor = b_vektor = c_vektor = d_vektor = None
@@ -197,23 +197,36 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             return a_vektor, b_vektor, c_vektor, d_vektor
 
     a_vektor, b_vektor, c_vektor, d_vektor = vektoren_einlesen(values, float_values)
-    print(a_vektor, b_vektor, c_vektor, d_vektor)
 
-    orts_vektoren = [
+    orts_vektoren_alle = [
         a_vektor,
         b_vektor,
         c_vektor,
         d_vektor
     ]
 
-    differenzen = [(i, j, v1 - v2)
-                   for (i, v1), (j, v2) in permutations(enumerate(orts_vektoren, start=1), 2)]
+    orts_vektoren_richtig = [0 if vektor is None else vektor for vektor in orts_vektoren_alle]
+
+    vektor_namen = [
+        "A",
+        "B",
+        "C",
+        "D"
+    ]
+
+    differenzen = [(name1, name2, v2 - v1 )
+                   for (name1, v1), (name2, v2) in permutations(zip(vektor_namen, orts_vektoren_richtig), 2)]
 
 
-    vektoren_kombi = {f"{idx1}-{idx2}": diff for idx1, idx2, diff in differenzen}
-    print(vektoren_kombi)
+    vektoren_kombi = {f"{name1}-{name2}": diff for name1, name2, diff in differenzen}
 
-    # to do: shitload of regex expressions https://www.geeksforgeeks.org/python/python-regex/
+    treffer = None
+    for key in vektoren_kombi:
+        if re.search(befehl, key):
+            treffer = (key, vektoren_kombi[key])
+            break
+
+    if treffer[0] == "A-B":
 
 
 
