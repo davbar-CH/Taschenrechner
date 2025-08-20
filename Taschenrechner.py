@@ -220,13 +220,22 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 
     vektoren_kombi = {f"{name1}-{name2}": diff for name1, name2, diff in differenzen}
 
-    treffer = None
+    print(befehl)
+    treffer_liste = []
     for key in vektoren_kombi:
-        if re.search(befehl, key):
-            treffer = (key, vektoren_kombi[key])
-            break
+        if (re.findall(r'(\S)-(\S)', befehl)
+                or re.findall(r"(\S)", befehl)
+                or re.search(r"(\S-\S)\s*(\S)\s*(\S-\S)", befehl)):
+            treffer = [key, vektoren_kombi[key]]
+            treffer_liste.append(treffer)
 
-    if treffer[0] == "A-B":
+
+    for treffer in treffer_liste:
+        key = treffer[0]
+        value = treffer[1]
+        anzeige_key = "".join(key.split("-"))
+        anzeige.insert(END, f"{anzeige_key} ist {value}\n")
+
 
 
 
