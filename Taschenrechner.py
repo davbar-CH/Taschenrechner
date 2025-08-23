@@ -9,6 +9,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.patches import Polygon
 import re
+
+
 def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
     y = ((a2 * c1) - (a1 * c2)) / ((a2 * b1) - (a1 * b2))
     x = (c1 - b1 * y) / a1
@@ -117,7 +119,7 @@ def kurvendiskussion(funktion, anzeige):
 
     def hoch_tief(funktion, anzeige):
         x = Symbol("x")
-        abg_funktion_2 = ableitung(funktion,2,"a")
+        abg_funktion_2 = ableitung(funktion, 2, "a")
         x_res_liste = extremstelle(funktion)
 
         for anzahl, x_res in enumerate(x_res_liste):
@@ -131,12 +133,12 @@ def kurvendiskussion(funktion, anzeige):
 
     def wendepunkt(funktion, anzeige):
         x = Symbol("x")
-        abg_funktion_2 = ableitung(funktion,2,"a")
+        abg_funktion_2 = ableitung(funktion, 2, "a")
 
         x_res_liste = solve(abg_funktion_2, x)
         for anzahl, x_res in enumerate(x_res_liste):
             y_res = funktion.subs(x, x_res)
-            anzeige.insert(END, f"{anzahl+1}. Wendepunkt bei ({x_res}und{y_res})" + "\n")
+            anzeige.insert(END, f"{anzahl + 1}. Wendepunkt bei ({x_res}und{y_res})" + "\n")
 
     def symmetrien(funktion, anzeige):
         x = Symbol("x")
@@ -163,27 +165,27 @@ def aufleitung(funktion_expr, n_aufleitung_int, anzeige):
         anzeige.insert(END, f"{n_aufleitung_int}.Aufgeleitete Funktion:{aufg_funktion}" + "\n")
     return aufg_funktion
 
-def integrale(funktion, anzeige, a,b):
+
+def integrale(funktion, anzeige, a, b):
     x = Symbol("x")
-    area = sympy.integrate(funktion, (x,a,b))
+    area = sympy.integrate(funktion, (x, a, b))
     anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
 
+
 def vektorgeometrie(values, float_values, anzeige, befehl):
-
-
     def vektoren_einlesen(values, float_values):
         a_vektor = b_vektor = c_vektor = d_vektor = None
 
-        if all(v[2] == '' for v in values[:4]):         # nachfolgende Befehle können natürlich vereinfacht werden
-           if len(float_values[0]) > 0:                 # aber so ist es klar und Einzeiler sind nichts für mich
-               a_vektor = np.array(float_values[0])
-           if len(float_values[1]) > 0:
-               b_vektor = np.array(float_values[1])
-           if len(float_values[2]) > 0:
-               c_vektor = np.array(float_values[2])
-           if len(float_values[3]) > 0:
-               d_vektor = np.array(float_values[3])
-           return a_vektor, b_vektor, c_vektor, d_vektor
+        if all(v[2] == '' for v in values[:4]):  # nachfolgende Befehle können natürlich vereinfacht werden
+            if len(float_values[0]) > 0:  # aber so ist es klar und Einzeiler sind nichts für mich
+                a_vektor = np.array(float_values[0])
+            if len(float_values[1]) > 0:
+                b_vektor = np.array(float_values[1])
+            if len(float_values[2]) > 0:
+                c_vektor = np.array(float_values[2])
+            if len(float_values[3]) > 0:
+                d_vektor = np.array(float_values[3])
+            return a_vektor, b_vektor, c_vektor, d_vektor
 
         else:
             if len(float_values[0]) > 0:
@@ -214,30 +216,23 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
         "D"
     ]
 
-    differenzen = [(name1, name2, v2 - v1 )
+    differenzen = [(name1, name2, v2 - v1)
                    for (name1, v1), (name2, v2) in permutations(zip(vektor_namen, orts_vektoren_richtig), 2)]
-
 
     vektoren_kombi = {f"{name1}-{name2}": diff for name1, name2, diff in differenzen}
 
-    print(befehl)
-    treffer_liste = []
     for key in vektoren_kombi:
-        if (re.findall(r'(\S)-(\S)', befehl)
-                or re.findall(r"(\S)", befehl)
-                or re.search(r"(\S-\S)\s*(\S)\s*(\S-\S)", befehl)):
-            treffer = [key, vektoren_kombi[key]]
-            treffer_liste.append(treffer)
+        if key == befehl:
+            ein_vektor = key
+            print(vektoren_kombi[key])
+            anzeige_key = "".join(key.split("-"))
+            anzeige.insert(END, f"{anzeige_key} ist {vektoren_kombi[key]}\n")
 
-
-    for treffer in treffer_liste:
-        key = treffer[0]
-        value = treffer[1]
-        anzeige_key = "".join(key.split("-"))
-        anzeige.insert(END, f"{anzeige_key} ist {value}\n")
-
-
-
+    def operation_auslesen():
+        resultat = re.search(r"(\b[a-z]+\b)", string=befehl)
+        if resultat:
+            operation = resultat.groups(1)
+            anzeige.insert(END, f"{operation}\n")
 
     def skalarprodukt(vektor1, vektor2):
         skalarprodukt = 0
@@ -265,7 +260,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 
         return winkel_deg
 
-    def ebene_zwei(vektor1, vektor2):
+    def ebene(vektor1, vektor2):
         kreuzprodukt = np.cross(vektor1, vektor2)
         d = -np.dot(kreuzprodukt, 0)
         try:
@@ -373,12 +368,13 @@ class Page2(tk.Frame):
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         button2 = Button(self, height=2, width=20, text="Kürvendiskussion",
-                             command=lambda: controller.show_frame(Page7))
+                         command=lambda: controller.show_frame(Page7))
 
         button2.grid(row=2, column=1, padx=10, pady=10)
 
         button3 = Button(self, height=2, width=20, text="Integrale", command=lambda: controller.show_frame(Page9))
         button3.grid(row=3, column=1, padx=10, pady=10)
+
 
 # Vektoren
 class Page3(tk.Frame):
@@ -397,13 +393,14 @@ class Page3(tk.Frame):
             []
         ])
 
-
         # Koeffizienten-Labels für die Vektoren
         labels = ["x", "y", "z", None]
 
         # vier Punkte Überschrift
         for col in range(4):
-            ttk.Label(self, text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", "vierter Punkt, D"][col]}").grid(row=2, column=2 + col, padx=10, pady=10)
+            ttk.Label(self,
+                      text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", "vierter Punkt, D"][col]}").grid(
+                row=2, column=2 + col, padx=10, pady=10)
             for row in range(3):
                 if labels[col]:  # Falls Text vorhanden, dann labels setzen
                     ttk.Label(self, text=labels[row]).grid(row=row + 3, column=1, padx=10, pady=10, sticky="e")
@@ -437,7 +434,6 @@ class Page3(tk.Frame):
 
             befehl = operation.get("1.0", "end-1c")
             vektorgeometrie(cords, floats, anzeige, befehl)
-
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
         values_button.grid(row=3, column=8, padx=10, pady=10, sticky="w")
@@ -478,7 +474,6 @@ class Page4(tk.Frame):
         def solve_and_show():
             values = [e.get("1.0", "end-1c").strip() for e in self.entries_2x2]
             if len(values) == 6:
-
                 int_values = [int(v) for v in values]
                 a1, b1, r1, a2, b2, r2 = int_values
                 zweimalzwei(a1, b1, a2, b2, r1, r2, anzeige)
@@ -578,6 +573,7 @@ class Page6(tk.Frame):
         anzeige = Text(self, height=5, width=25, bg="light cyan")
         anzeige.grid(row=3, column=8, padx=10, pady=10)
 
+
 # kurvendiskussion
 class Page7(tk.Frame):
     def __init__(self, parent, controller):
@@ -629,6 +625,7 @@ class Page7(tk.Frame):
         plot_button = ttk.Button(self, text="Plot", command=anplot)
         plot_button.grid(row=4, column=2, padx=10, pady=10)
 
+
 # funktionsgraph
 class Page8(tk.Frame):
     def __init__(self, parent, controller):
@@ -665,14 +662,14 @@ class Page8(tk.Frame):
             y_vals = np.vectorize(lambda x: f(x) if x != 0 else np.nan)(x_vals)
 
         if d_oder_i == "int":
-            ix = np.linspace(args,kwargs)
+            ix = np.linspace(args, kwargs)
             iy = f(ix)
             verts = [(args, 0), *zip(ix, iy), (kwargs, 0)]
             poly = Polygon(verts, facecolor='0.9', edgecolor='0.5')
             plot1.add_patch(poly)
 
             plot1.text(0.5 * (args + kwargs), 30, r"$\int_a^b f(x)\mathrm{d}x$",
-                           horizontalalignment='center', fontsize=20)
+                       horizontalalignment='center', fontsize=20)
         # Plot the function
         plot1.plot(x_vals, y_vals)
         plot1.grid(True)
@@ -725,7 +722,7 @@ class Page9(tk.Frame):
             funktion_expr = sympify(funktion)
 
             aufleitung(funktion_expr, n_aufleitung_int, anzeige)
-            integrale(funktion_expr, anzeige, a,b)
+            integrale(funktion_expr, anzeige, a, b)
             return funktion_expr, a, b
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
@@ -748,9 +745,8 @@ class Page9(tk.Frame):
 
         plot_button = ttk.Button(self, text="Plot", command=anplot)
         plot_button.grid(row=4, column=2, padx=10, pady=10)
+
+
 # Driver Code
 app = tkinterApp()
 app.mainloop()
-
-
-
