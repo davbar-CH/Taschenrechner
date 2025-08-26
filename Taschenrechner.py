@@ -222,7 +222,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 
     vektoren_kombi = {f"{name1}-{name2}": diff for name1, name2, diff in differenzen}
 
-    def vektoren_auslesen(mehrfach):
+    def vektoren_auslesen():
         vektoren_werte = []
         vektoren_namen = []
         resultat = re.search(r"(\b[A-Z]+\b-\b[A-Z]+\b)(.*)(\b[A-Z]+\b-\b[A-Z]+\b)", string=befehl)
@@ -232,11 +232,10 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for vektor in vektoren:
                 for key in vektoren_kombi:
                     if key == vektor:
+                        #anzeige.insert(END, f"{vektor} ist {vektoren_kombi[key]}\n")
                         vektoren_werte.append(vektoren_kombi[key])
                         vektoren_namen.append(key)
-                        if mehrfach == True:
-                            anzeige.insert(END, f"{vektor} ist {vektoren_kombi[key]}\n")
-            return vektoren_werte, vektoren_namen
+            return vektoren_werte, vektoren_namen, "mehrfach"
 
         einzelner_vektor = re.search(r"(\b[A-Z]+\b-\b[A-Z]+\b)", string=befehl)
         if einzelner_vektor:
@@ -245,9 +244,10 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for vektor in vektoren:
                 for key in vektoren_kombi:
                     if key == vektor:
+                        #anzeige.insert(END, f"{vektor} ist {vektoren_kombi[key]}\n")
                         vektoren_werte.append(vektoren_kombi[key])
                         vektoren_namen.append(key)
-            return vektoren_werte, vektoren_namen
+            return vektoren_werte, vektoren_namen, "einzel"
 
         anzeige.insert(END, f"Es gibt keinen solchen Vektor: {befehl}\n")
         return None
@@ -299,43 +299,47 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
         else:
             return None
 
-    werte, namen = vektoren_auslesen(mehrfach=False)
+    werte, namen, art = vektoren_auslesen()
+    if art == "mehrfach":
+        if operation == "sp":
+            skalarp = skalarprodukt(werte[0], werte[1])
+            anzeige.insert(END, f"Skalarprodukt von {namen[0]} und {namen[1]}: {skalarp}\n")
 
-    if operation == "sp":
-        skalarp = skalarprodukt(werte[0], werte[1])
-        anzeige.insert(END, f"Skalarprodukt von {namen[0]} und {namen[1]}: {skalarp}\n")
+        if operation == "kp":
+            kreuzp = vektor_produkt(werte[0], werte[1])
+            anzeige.insert(END, f"Kreuzprodukt von {namen[0]} und {namen[1]}: {kreuzp}\n")
 
-    if operation == "kp":
-        kreuzp = vektor_produkt(werte[0], werte[1])
-        anzeige.insert(END, f"Kreuzprodukt von {namen[0]} und {namen[1]}: {kreuzp}\n")
+        if operation == "winkel":
+            winkel = winkel(werte[0], werte[1])
+            anzeige.insert(END, f"Winkel zwischen {namen[0]} und {namen[1]}: {winkel}\n")
 
-    if operation == "winkel":
-        winkel = winkel(werte[0], werte[1])
-        anzeige.insert(END, f"Winkel zwischen {namen[0]} und {namen[1]}: {winkel}\n")
+        if operation == "ebene":
+            punkt = re.search(r"(\b[A-Z]+\b)", string=befehl)
+            punkt = punkt.group()
 
-    if operation == "ebene":
-        punkt = re.search(r"(\b[A-Z]+\b)", string=befehl)
-        punkt = punkt.group()
+            punkt_wert = None
+            if punkt == "A":
+                punkt_wert = orts_vektoren_alle[0]
+            if punkt == "B":
+                punkt_wert = orts_vektoren_alle[1]
+            if punkt == "C":
+                punkt_wert = orts_vektoren_alle[2]
+            if punkt == "D":
+                punkt_wert = orts_vektoren_alle[3]
 
-        punkt_wert = None
-        if punkt == "A":
-            punkt_wert = orts_vektoren_alle[0]
-        if punkt == "B":
-            punkt_wert = orts_vektoren_alle[1]
-        if punkt == "C":
-            punkt_wert = orts_vektoren_alle[2]
-        if punkt == "D":
-            punkt_wert = orts_vektoren_alle[3]
+            ebene = ebene(werte[0], werte[1], punkt_wert)
+            if ebene is not None:
+                anzeige.insert(END, f"Ebene aus {namen[0]} und {namen[1]}: {ebene}\n")
+            else:
+                anzeige.insert(END, "Entweder ein 2D-Vektor (dasselbe wie Skalarprodukt) oder ein sonstiger Fehler\n")
 
-        ebene = ebene(werte[0], werte[1], punkt_wert)
-        if ebene is not None:
-            anzeige.insert(END, f"Ebene aus {namen[0]} und {namen[1]}: {ebene}\n")
-        else:
-            anzeige.insert(END, "Entweder ein 2D-Vektor (dasselbe wie Skalarprodukt) oder ein sonstiger Fehler\n")
+        if operation == "und":
+            for wert, name in zip(werte, namen):
+                anzeige.insert(END, f"{name} ist {wert}\n")
 
-    if operation is None:
-        werte, namen = vektoren_auslesen(mehrfach=True)
-        anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
+    if art == "einzel":
+        if operation is None:
+            anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
 
 class tkinterApp(tk.Tk):
 
