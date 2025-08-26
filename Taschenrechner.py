@@ -12,12 +12,14 @@ import re
 
 
 def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
+    anzeige.delete(1.0, END)
     y = ((a2 * c1) - (a1 * c2)) / ((a2 * b1) - (a1 * b2))
     x = (c1 - b1 * y) / a1
     anzeige.insert(END, f"a ist {x} und b ist {y}")
 
 
 def dreimaldrei(a1, b1, c1, a2, b2, c2, a3, b3, c3, d1, d2, d3, anzeige):
+    anzeige.delete(1.0, END)
     rest = (a1 * (b2 * c3 - b3 * c2) - b1 * (a2 * c3 - a3 * c2) + c1 * (a2 * b3 - a3 * b2))
     z = (a1 * (b2 * d3 - b3 * d2) - b1 * (a2 * d3 - a3 * d2) + d1 * (a2 * b3 - a3 * b2)) / rest
     y = (a1 * (d2 * c3 - d3 * c2) - d1 * (a2 * c3 - a3 * c2) + c1 * (a2 * d3 - a3 * d2)) / rest
@@ -26,6 +28,7 @@ def dreimaldrei(a1, b1, c1, a2, b2, c2, a3, b3, c3, d1, d2, d3, anzeige):
 
 
 def viermalvier(a1, b1, c1, d1, r1, a2, b2, c2, d2, r2, a3, b3, c3, d3, r3, a4, b4, c4, d4, r4, anzeige):
+    anzeige.delete(1.0, END)
     A = np.array([
         [a1, b1, c1, d1],
         [a2, b2, c2, d2],
@@ -103,12 +106,14 @@ def ableitung(funktion_expr, n_ableitung_int, anzeige):
     if anzeige == "a":
         pass
     else:
+        anzeige.delete(1.0, END)
         anzeige.insert(END, f"{n_ableitung_int}.Abgeleitete Funktion:{abg_funktion}" + "\n")
 
     return abg_funktion
 
 
 def kurvendiskussion(funktion, anzeige):
+    anzeige.delete(1.0, END)
     def extremstelle(funktion):
         # extremstelle
         x = Symbol('x')
@@ -155,6 +160,7 @@ def kurvendiskussion(funktion, anzeige):
 
 
 def aufleitung(funktion_expr, n_aufleitung_int, anzeige):
+    anzeige.delete(1.0, END)
     x = Symbol("x")
     aufg_funktion = funktion_expr
     for i in range(n_aufleitung_int):
@@ -168,12 +174,14 @@ def aufleitung(funktion_expr, n_aufleitung_int, anzeige):
 
 
 def integrale(funktion, anzeige, a, b):
+    anzeige.delete(1.0, END)
     x = Symbol("x")
     area = sympy.integrate(funktion, (x, a, b))
     anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
 
 
 def vektorgeometrie(values, float_values, anzeige, befehl):
+    anzeige.delete(1.0, END)
     def vektoren_einlesen(values, float_values):
         a_vektor = b_vektor = c_vektor = d_vektor = None
 
@@ -360,7 +368,7 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9):
+        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -399,7 +407,7 @@ class StartPage(tk.Frame):
                                    command=lambda: controller.show_frame(Page2))
         funktionen_button.grid(row=2, column=1, padx=10, pady=10)
 
-        vektor_button = Button(self, height=2, width=20, text="Vektoren", command=lambda: controller.show_frame(Page3))
+        vektor_button = Button(self, height=2, width=20, text="Vektoren", command=lambda: controller.show_frame(Page4))
         vektor_button.grid(row=1, column=2, padx=10, pady=10)
 
 
@@ -414,15 +422,15 @@ class Page1(tk.Frame):
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         zweimalzwei_button = Button(self, height=2, width=20, text="2x2",
-                                    command=lambda: controller.show_frame(Page4))
+                                    command=lambda: controller.show_frame(Page5))
         zweimalzwei_button.grid(row=2, column=1, padx=10, pady=10)
 
         dreimaldrei_button = Button(self, height=2, width=20, text="3x3",
-                                    command=lambda: controller.show_frame(Page5))
+                                    command=lambda: controller.show_frame(Page6))
         dreimaldrei_button.grid(row=1, column=2, padx=10, pady=10)
 
         viermalvier_button = Button(self, height=2, width=20, text="4x4",
-                                    command=lambda: controller.show_frame(Page6))
+                                    command=lambda: controller.show_frame(Page7))
         viermalvier_button.grid(row=2, column=2, padx=10, pady=10)
 
 
@@ -438,18 +446,53 @@ class Page2(tk.Frame):
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         button2 = Button(self, height=2, width=20, text="Kürvendiskussion",
-                         command=lambda: controller.show_frame(Page7))
+                         command=lambda: controller.show_frame(Page8))
 
         button2.grid(row=2, column=1, padx=10, pady=10)
 
-        button3 = Button(self, height=2, width=20, text="Integrale", command=lambda: controller.show_frame(Page9))
+        button3 = Button(self, height=2, width=20, text="Integrale", command=lambda: controller.show_frame(Page10))
         button3.grid(row=3, column=1, padx=10, pady=10)
 
-
-# Vektoren
+# cheat sheet
 class Page3(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.controller = controller  # Speichern des Controllers als Instanzvariable
+        label = ttk.Label(self, text="Cheat Sheet")
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page4))
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        listbox = Listbox(self, height=7,
+                          width=25,
+                          bg="light cyan",
+                          activestyle='dotbox',
+                          font="Arial",
+                          fg="black")
+
+        # Define a label for the list.
+        label1 = Label(self, text="Übersicht der verschiedenen Operationen")
+        label1.grid(row=1, column=4, padx=10, pady=10)
+        label2 = Label(self, text="Schreibweise: (grossgeschrieben) von DA-DORT, Operation wird kleingeschrieben")
+        label2.grid(row=2, column=4, padx=10, pady=10)
+
+        # insert elements by their
+        # index and names.
+        listbox.insert(1, "Einzelner Vektor: A-B")
+        listbox.insert(2, "Mehrere Vektoren: A-B und B-C")
+        listbox.insert(3, "Kreuzprodukt: A-B kp B-C")
+        listbox.insert(4, "Skalarprodukt: A-B sp B-C")
+        listbox.insert(5, "Ebene: A-B ebene B-C")
+        listbox.insert(5, "Winkel: A-B winkel B-C")
+
+        listbox.grid(row=5, column=4, padx=10, pady=10)
+
+# Vektoren
+class Page4(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
         label = ttk.Label(self, text="Vektoren")
         label.grid(row=0, column=4, padx=10, pady=10)
 
@@ -508,18 +551,21 @@ class Page3(tk.Frame):
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
         values_button.grid(row=3, column=8, padx=10, pady=10, sticky="w")
 
+        format_button = ttk.Button(self, text="Cheat sheet", command=lambda: controller.show_frame(Page3))
+        format_button.grid(row=6, column=1, padx=10, pady=10, sticky="w")
+
         anzeige = Text(self, height=5, width=25, bg="light cyan")
         anzeige.grid(row=4, column=8, padx=10, pady=10)
 
 
 # 2x2
-class Page4(tk.Frame):
+class Page5(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="2x2")
         label.grid(row=0, column=4, padx=10, pady=10)
 
-        button1 = ttk.Button(self, text="Startseite", command=lambda: controller.show_frame(StartPage))
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         # Speichere alle Eingabefelder zur späteren Verwendung (z.B. Auswertung)
@@ -543,10 +589,13 @@ class Page4(tk.Frame):
 
         def solve_and_show():
             values = [e.get("1.0", "end-1c").strip() for e in self.entries_2x2]
-            if len(values) == 6:
-                int_values = [int(v) for v in values]
-                a1, b1, r1, a2, b2, r2 = int_values
-                zweimalzwei(a1, b1, a2, b2, r1, r2, anzeige)
+            try:
+                if len(values) == 6:
+                    int_values = [int(v) for v in values]
+                    a1, b1, r1, a2, b2, r2 = int_values
+                    zweimalzwei(a1, b1, a2, b2, r1, r2, anzeige)
+            except ValueError:
+                anzeige.insert(END, f"Ein Feld ist noch leer")
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
         values_button.grid(row=2, column=8, padx=10, pady=10)
@@ -556,13 +605,13 @@ class Page4(tk.Frame):
 
 
 # 3x3
-class Page5(tk.Frame):
+class Page6(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="3x3")
         label.grid(row=0, column=4, padx=10, pady=10)
 
-        button1 = ttk.Button(self, text="Startseite", command=lambda: controller.show_frame(StartPage))
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         # Speichere alle Eingabefelder zur späteren Verwendung (z.B. Auswertung)
@@ -587,10 +636,13 @@ class Page5(tk.Frame):
 
         def solve_and_show():
             values = [e.get("1.0", "end-1c").strip() for e in self.entries_3x3]
-            if len(values) == 12:
-                int_values = [int(v) for v in values]
-                a1, b1, c1, r1, a2, b2, c2, r2, a3, b3, c3, r3 = int_values
-                dreimaldrei(a1, b1, c1, a2, b2, c2, a3, b3, c3, r1, r2, r3, anzeige)
+            try:
+                if len(values) == 12:
+                    int_values = [int(v) for v in values]
+                    a1, b1, c1, r1, a2, b2, c2, r2, a3, b3, c3, r3 = int_values
+                    dreimaldrei(a1, b1, c1, a2, b2, c2, a3, b3, c3, r1, r2, r3, anzeige)
+            except ValueError:
+                anzeige.insert(END, f"Ein Feld ist noch leer")
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
         values_button.grid(row=2, column=8, padx=10, pady=10)
@@ -600,13 +652,13 @@ class Page5(tk.Frame):
 
 
 # 4x4
-class Page6(tk.Frame):
+class Page7(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="4x4")
         label.grid(row=0, column=4, padx=10, pady=10)
 
-        button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         # Speichere alle Eingabefelder zur späteren Verwendung (z.B. Auswertung)
@@ -632,10 +684,13 @@ class Page6(tk.Frame):
 
         def solve_and_show():
             values = [e.get("1.0", "end-1c").strip() for e in self.entries_4x4]
-            if len(values) == 20:
-                int_values = [int(v) for v in values]
-                a1, b1, c1, d1, r1, a2, b2, c2, d2, r2, a3, b3, c3, d3, r3, a4, b4, c4, d4, r4 = int_values
-                viermalvier(a1, b1, c1, d1, r1, a2, b2, c2, d2, r2, a3, b3, c3, d3, r3, a4, b4, c4, d4, r4, anzeige)
+            try:
+                if len(values) == 20:
+                    int_values = [int(v) for v in values]
+                    a1, b1, c1, d1, r1, a2, b2, c2, d2, r2, a3, b3, c3, d3, r3, a4, b4, c4, d4, r4 = int_values
+                    viermalvier(a1, b1, c1, d1, r1, a2, b2, c2, d2, r2, a3, b3, c3, d3, r3, a4, b4, c4, d4, r4, anzeige)
+            except ValueError:
+                anzeige.insert(END, f"Ein Feld ist noch leer")
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
         values_button.grid(row=2, column=8, padx=10, pady=10)
@@ -645,14 +700,14 @@ class Page6(tk.Frame):
 
 
 # kurvendiskussion
-class Page7(tk.Frame):
+class Page8(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
         label = ttk.Label(self, text="Kürven diskutieren")
         label.grid(row=0, column=4, padx=10, pady=10)
 
-        button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page2))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         funktion_label = ttk.Label(self, text="Funktion")
@@ -661,9 +716,9 @@ class Page7(tk.Frame):
         self.funktion.grid(row=3, column=1, padx=10, pady=10)
 
         n_ableitung_label = ttk.Label(self, text="Anzahl Ableitungen")
-        n_ableitung_label.grid(row=2, column=5, padx=10, pady=10)
+        n_ableitung_label.grid(row=2, column=4, padx=10, pady=10)
         self.n_ableitung = tk.Entry(self)
-        self.n_ableitung.grid(row=3, column=5, padx=10, pady=10)
+        self.n_ableitung.grid(row=3, column=4, padx=10, pady=10)
 
         def solve_and_show():
             funktion = self.funktion.get("1.0", "end-1c")
@@ -676,28 +731,28 @@ class Page7(tk.Frame):
             return funktion_expr
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
-        values_button.grid(row=2, column=8, padx=10, pady=10)
+        values_button.grid(row=2, column=5, padx=10, pady=10)
 
         anzeige = Text(self, height=10, width=40, bg="light cyan")
-        anzeige.grid(row=3, column=8, padx=10, pady=10)
+        anzeige.grid(row=3, column=5, padx=10, pady=10)
 
         def anplot():
             try:
                 funktion_expr = solve_and_show()
                 # Zugriff auf Page8 über den Controller
-                page8 = self.controller.frames[Page8]
-                self.controller.show_frame(Page8)
+                page9 = self.controller.frames[Page9]
+                self.controller.show_frame(Page9)
                 d_oder_i = "diff"
-                page8.plot(funktion_expr, d_oder_i)
+                page9.plot(funktion_expr, d_oder_i)
             except Exception as e:
                 print(f"Fehler beim Plotten: {e}")
 
         plot_button = ttk.Button(self, text="Plot", command=anplot)
-        plot_button.grid(row=4, column=2, padx=10, pady=10)
+        plot_button.grid(row=4, column=1, padx=10, pady=10)
 
 
 # funktionsgraph
-class Page8(tk.Frame):
+class Page9(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
@@ -720,7 +775,6 @@ class Page8(tk.Frame):
         fig = Figure(figsize=(5, 2), dpi=100)
         plot1 = fig.add_subplot(111)
 
-        # Convert SymPy function to a NumPy-compatible function
         x_sym = Symbol('x')
         f = lambdify(x_sym, funktion_expr, 'numpy')
 
@@ -755,15 +809,15 @@ class Page8(tk.Frame):
         toolbar.update()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-
-class Page9(tk.Frame):
+# Integrale
+class Page10(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
         label = ttk.Label(self, text="Integrale")
         label.grid(row=0, column=4, padx=10, pady=10)
 
-        button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page2))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         funktion_label = ttk.Label(self, text="Funktion")
@@ -771,15 +825,15 @@ class Page9(tk.Frame):
         self.funktion = tk.Text(self, height=3, width=20)
         self.funktion.grid(row=3, column=1, padx=10, pady=10)
 
-        n_aufleitung_label = ttk.Label(self, text="Anzahl Aufleitungen")
-        n_aufleitung_label.grid(row=2, column=5, padx=10, pady=10)
+        n_aufleitung_label = ttk.Label(self, text="Anzahl Integration")
+        n_aufleitung_label.grid(row=2, column=3, padx=10, pady=10)
         self.n_aufleitung = tk.Entry(self)
-        self.n_aufleitung.grid(row=3, column=5, padx=10, pady=10)
+        self.n_aufleitung.grid(row=3, column=3, padx=10, pady=10)
 
         range_label = ttk.Label(self, text="Von wo bis wo, Format: (a,b)")
-        range_label.grid(row=2, column=6, padx=10, pady=10)
+        range_label.grid(row=2, column=4, padx=10, pady=10)
         self.range = tk.Entry(self)
-        self.range.grid(row=3, column=6, padx=10, pady=10)
+        self.range.grid(row=3, column=4, padx=10, pady=10)
 
         def solve_and_show():
             funktion = self.funktion.get("1.0", "end-1c")
@@ -796,26 +850,24 @@ class Page9(tk.Frame):
             return funktion_expr, a, b
 
         values_button = ttk.Button(self, text="solv", command=solve_and_show)
-        values_button.grid(row=2, column=8, padx=10, pady=10)
+        values_button.grid(row=2, column=5, padx=10, pady=10)
 
         anzeige = Text(self, height=10, width=40, bg="light cyan")
-        anzeige.grid(row=3, column=8, padx=10, pady=10)
+        anzeige.grid(row=3, column=5, padx=10, pady=10)
 
         def anplot():
             try:
                 funktion_expr, a, b = solve_and_show()
-
                 # Zugriff auf Page8 über den Controller
-                page8 = self.controller.frames[Page8]
-                self.controller.show_frame(Page8)
+                page9 = self.controller.frames[Page9]
+                self.controller.show_frame(Page9)
                 d_oder_i = "int"
-                page8.plot(funktion_expr, d_oder_i, a, b)
+                page9.plot(funktion_expr, d_oder_i, a, b)
             except Exception as e:
                 print(f"Fehler beim Plotten: {e}")
 
         plot_button = ttk.Button(self, text="Plot", command=anplot)
-        plot_button.grid(row=4, column=2, padx=10, pady=10)
-
+        plot_button.grid(row=4, column=1, padx=10, pady=10)
 
 # Driver Code
 app = tkinterApp()
