@@ -179,7 +179,8 @@ def integrale(funktion, anzeige, a, b):
     area = sympy.integrate(funktion, (x, a, b))
     anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
 
-
+# speicher, falls man einen Vektor behalten möchte
+speicher_dic = {}
 def vektorgeometrie(values, float_values, anzeige, befehl):
     anzeige.delete(1.0, END)
     def vektoren_einlesen(values, float_values):
@@ -308,6 +309,24 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             return None
 
     werte, namen, art = vektoren_auslesen()
+
+    if art == "einzel":
+        if operation == "speicher":
+            speicher = re.search(r"(\b[S-Z]+\b)", string=befehl)
+            speicher = speicher.group()
+            speicher_dic.update({speicher: (werte, namen)})
+            anzeige.insert(END, f"Vektor {namen} ist jetzt gespeichert als: {speicher}\n")
+
+        if operation is None:
+            if not bool(speicher_dic):
+                anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
+            else:
+                speicher = re.search(r"(\b[S-Z]+\b)", string=befehl)
+                (werte, namen) = speicher_dic[speicher]
+                anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
+
+
+
     if art == "mehrfach":
         if operation == "sp":
             skalarp = skalarprodukt(werte[0], werte[1])
@@ -345,9 +364,6 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
-    if art == "einzel":
-        if operation is None:
-            anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
 
 class tkinterApp(tk.Tk):
 
