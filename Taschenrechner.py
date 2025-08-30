@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.patches import Polygon
 import re
+import scipy as sp
 
 
 def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
@@ -323,7 +324,6 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
                 anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
 
 
-
     if art == "mehrfach":
         if operation == "sp":
             skalarp = skalarprodukt(werte[0], werte[1])
@@ -361,6 +361,56 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
+def flugbahn(werte, felder_dic):
+    #labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
+    g = 9.80665
+    h = werte["Anfangshöhe"]
+    v0 = werte["Anfangsgeschwindigkeit"]
+    a  = werte["Abwurfwinkel"]
+    t  = werte["Flugzeit"]
+    R = werte["Distanz"]
+    h_max = werte["maximale Höhe"]
+
+    vx = v0 * cos(a)
+    vy = v0 * sin(a) - (g * t)
+
+    fs = sympy.Symbol("fs")
+    fo = sympy.Symbol("fo")
+    flugzeit_stand = (2*sin(a)*v0 / g) - fs
+    flugzeit_oben = (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h)) - fo
+
+    rs = sympy.Symbol("rs")
+    ro = sympy.Symbol("ro")
+    reichweite_stand = (v0**2 * sin(2*a)/g) - rs
+    reichweite_oben = (v0*cos(a) * (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h))/g) - ro
+
+    hs = sympy.Symbol("hs")
+    ho = sympy.Symbol("ho")
+    h_max_stand = ((v0**2 * sin(a)**2) / (2*g)) - hs
+    h_max_oben = (h + (v0*cos(a)**2) / (2*g)) - ho
+
+
+    if h == 0:
+        if t is None:
+            felder_dic["Flugzeit"].insert(END, f"{sympy.solve(flugzeit_stand, fs)}\n")
+
+        if R is None:
+            felder_dic["Distanz"].insert(END, f"{sympy.solve(reichweite_stand, rs)}\n")
+
+        if h_max is None:
+            felder_dic["maximale Höhe"].insert(END, f"{sympy.solve(h_max_stand, hs)}\n")
+
+    if h > 0:
+        if t is None:
+            felder_dic["Flugzeit"].insert(END, f"{sympy.solve(flugzeit_oben, fo)}\n")
+
+        if R is None:
+            felder_dic["Distanz"].insert(END, f"{sympy.solve(reichweite_oben, ro)}\n")
+
+        if h_max is None:
+            felder_dic["maximale Höhe"].insert(END, f"{sympy.solve(h_max_oben, ho)}\n")
+
+
 # to do vektor save
 class tkinterApp(tk.Tk):
 
@@ -381,7 +431,7 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10):
+        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -422,6 +472,9 @@ class StartPage(tk.Frame):
 
         vektor_button = Button(self, height=2, width=20, text="Vektoren", command=lambda: controller.show_frame(Page4))
         vektor_button.grid(row=1, column=2, padx=10, pady=10)
+
+        flugbahn_button = Button(self, height=2, width=20, text="Flugbahn", command=lambda: controller.show_frame(Page11))
+        flugbahn_button.grid(row=2, column=2, padx=10, pady=10)
 
 
 # Gleichungssysteme Übersicht
@@ -882,6 +935,37 @@ class Page10(tk.Frame):
 
         plot_button = ttk.Button(self, text="Plot", command=anplot)
         plot_button.grid(row=4, column=1, padx=10, pady=10)
+
+class Page11(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller  # Speichern des Controllers als Instanzvariable
+        label = ttk.Label(self, text="Flugbahn")
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(StartPage))
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
+        felder_dic = {}
+
+        for col in range(1, 7):
+            bezeichnung = tk.Label(self, text=labels[col-1])
+            bezeichnung.grid(row=2, column=1+col, padx=10, pady=10, sticky="w")
+            entry = tk.Text(self, height=1, width=10, bg="light cyan")
+            entry.grid(row=3, column=1+col, padx=10, pady=10, sticky="w")
+            felder_dic.update({labels[col-1]: entry})
+
+        def solve_and_show():
+            werte = {}
+            for key, widget in felder_dic.items():
+                eintrag_feld = widget.get("1.0", "end-1c")
+                werte[key] = eintrag_feld
+            flugbahn(werte, felder_dic)
+
+
+        solv_button = ttk.Button(self, text="solv", command=solve_and_show)
+        solv_button.grid(row=1, column=5, padx=10, pady=10)
 
 # Driver Code
 app = tkinterApp()
