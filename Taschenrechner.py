@@ -106,14 +106,13 @@ def ableitung(funktion_expr, n_ableitung_int, anzeige):
     if anzeige == "a":
         pass
     else:
-        anzeige.delete(1.0, END)
         anzeige.insert(END, f"{n_ableitung_int}.Abgeleitete Funktion:{abg_funktion}" + "\n")
 
     return abg_funktion
 
 
 def kurvendiskussion(funktion, anzeige):
-    anzeige.delete(1.0, END)
+
     def extremstelle(funktion):
         # extremstelle
         x = Symbol('x')
@@ -241,19 +240,17 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for vektor in vektoren:
                 for key in vektoren_kombi:
                     if key == vektor:
-                        #anzeige.insert(END, f"{vektor} ist {vektoren_kombi[key]}\n")
                         vektoren_werte.append(vektoren_kombi[key])
                         vektoren_namen.append(key)
             return vektoren_werte, vektoren_namen, "mehrfach"
 
-        einzelner_vektor = re.search(r"(\b[A-Z]+\b-\b[A-Z]+\b)", string=befehl)
+        einzelner_vektor = re.search(r"(\b[A-D]+\b-\b[A-D]+\b)", string=befehl)
         if einzelner_vektor:
             vektoren = einzelner_vektor.groups()
             print(vektoren)
             for vektor in vektoren:
                 for key in vektoren_kombi:
                     if key == vektor:
-                        #anzeige.insert(END, f"{vektor} ist {vektoren_kombi[key]}\n")
                         vektoren_werte.append(vektoren_kombi[key])
                         vektoren_namen.append(key)
             return vektoren_werte, vektoren_namen, "einzel"
@@ -364,7 +361,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
-
+# to do vektor save
 class tkinterApp(tk.Tk):
 
     # _init_ function for class tkinterApp
@@ -481,7 +478,7 @@ class Page3(tk.Frame):
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         listbox = Listbox(self, height=7,
-                          width=25,
+                          width=40,
                           bg="light cyan",
                           activestyle='dotbox',
                           font="Arial",
@@ -501,6 +498,7 @@ class Page3(tk.Frame):
         listbox.insert(4, "Skalarprodukt: A-B sp B-C")
         listbox.insert(5, "Ebene: A-B ebene B-C")
         listbox.insert(5, "Winkel: A-B winkel B-C")
+        listbox.insert(6, "Vektor speichern: Grossbuchstabe von S bis Z")
 
         listbox.grid(row=5, column=4, padx=10, pady=10)
 
@@ -741,7 +739,7 @@ class Page8(tk.Frame):
             n_ableitung_int = int(self.n_ableitung.get())
 
             funktion_expr = sympify(funktion)
-
+            anzeige.delete(1.0, END)
             ableitung(funktion_expr, n_ableitung_int, anzeige)
             kurvendiskussion(funktion_expr, anzeige)
             return funktion_expr
