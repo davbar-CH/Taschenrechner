@@ -3,13 +3,14 @@ from tkinter import *
 import tkinter.ttk as ttk
 import tkinter as tk
 from itertools import permutations
+
+import scipy
 import sympy
 from sympy import *
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.patches import Polygon
 import re
-import scipy as sp
 
 
 def zweimalzwei(a1, b1, a2, b2, c1, c2, anzeige):
@@ -369,46 +370,36 @@ def flugbahn(werte, felder_dic):
     a  = werte["Abwurfwinkel"]
     t  = werte["Flugzeit"]
     R = werte["Distanz"]
-    h_max = werte["maximale Höhe"]
+    h_m = werte["maximale Höhe"]
 
-    vx = v0 * cos(a)
-    vy = v0 * sin(a) - (g * t)
+    def solve(f, args):
+        i = args.index(None)
+        return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), i
 
-    fs = sympy.Symbol("fs")
-    fo = sympy.Symbol("fo")
-    flugzeit_stand = (2*sin(a)*v0 / g) - fs
-    flugzeit_oben = (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h)) - fo
+    # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
+    def flugzeit(v0, a, g, h, t):
+        return (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h)) - t
 
-    rs = sympy.Symbol("rs")
-    ro = sympy.Symbol("ro")
-    reichweite_stand = (v0**2 * sin(2*a)/g) - rs
-    reichweite_oben = (v0*cos(a) * (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h))/g) - ro
+    def reichweite(v0, a, g, h, R):
+        return (v0*cos(a) * (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h))/g) - R
 
-    hs = sympy.Symbol("hs")
-    ho = sympy.Symbol("ho")
-    h_max_stand = ((v0**2 * sin(a)**2) / (2*g)) - hs
-    h_max_oben = (h + (v0*cos(a)**2) / (2*g)) - ho
+    def maximale_hoehe(v0, a, g, h, h_m):
+        return (h + (v0*cos(a)**2) / (2*g)) - h_m
 
+    for i in range(3):
+        try:
+            res_aus_zeit = solve(flugzeit, (v0, a, g, h, t))
+        except Exception as e:
+            print(f"Es fehlt eine Angabe:{e}")
+        try:
+            res_aus_weite = solve(reichweite, (v0, a, g, h, R))
+        except Exception as e:
+            print(f"Es fehlt eine Angabe:{e}")
+        try:
+            res_aus_hoehe = solve(maximale_hoehe, (v0, a, g, h, h_m))
+        except Exception as e:
+            print(f"Es fehlt eine Angabe:{e}")
 
-    if h == 0:
-        if t is None:
-            felder_dic["Flugzeit"].insert(END, f"{sympy.solve(flugzeit_stand, fs)}\n")
-
-        if R is None:
-            felder_dic["Distanz"].insert(END, f"{sympy.solve(reichweite_stand, rs)}\n")
-
-        if h_max is None:
-            felder_dic["maximale Höhe"].insert(END, f"{sympy.solve(h_max_stand, hs)}\n")
-
-    if h > 0:
-        if t is None:
-            felder_dic["Flugzeit"].insert(END, f"{sympy.solve(flugzeit_oben, fo)}\n")
-
-        if R is None:
-            felder_dic["Distanz"].insert(END, f"{sympy.solve(reichweite_oben, ro)}\n")
-
-        if h_max is None:
-            felder_dic["maximale Höhe"].insert(END, f"{sympy.solve(h_max_oben, ho)}\n")
 
 
 # to do vektor save
