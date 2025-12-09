@@ -1,3 +1,5 @@
+import inspect
+
 import numpy as np
 from tkinter import *
 import tkinter.ttk as ttk
@@ -365,16 +367,18 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 def flugbahn(werte, felder_dic):
     #labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
-    h = werte["Anfangshöhe"]
-    v0 = werte["Anfangsgeschwindigkeit"]
-    a  = werte["Abwurfwinkel"]
-    t  = werte["Flugzeit"]
-    R = werte["Distanz"]
-    h_m = werte["maximale Höhe"]
+    h = (werte["Anfangshöhe"], "h")
+    v0 = (werte["Anfangsgeschwindigkeit"], "v0")
+    a  = (werte["Abwurfwinkel"], "a")
+    t  = (werte["Flugzeit"], "t")
+    R = (werte["Distanz"], "R")
+    h_m = (werte["maximale Höhe"], "h_m")
 
     def solve(f, args):
         i = args.index(None)
-        return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), i
+        sig = inspect.signature(f)
+        param_name = list(sig.parameters.keys())[i]
+        return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), i, param_name
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
     def flugzeit(v0, a, g, h, t):
@@ -386,19 +390,22 @@ def flugbahn(werte, felder_dic):
     def maximale_hoehe(v0, a, g, h, h_m):
         return (h + (v0*cos(a)**2) / (2*g)) - h_m
 
-    for i in range(3):
+    for j in range(3):
         try:
-            res_aus_zeit = solve(flugzeit, (v0, a, g, h, t))
+            res_aus_zeit, index, name = solve(flugzeit, (v0, a, g, h, t))
+
+
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
         try:
-            res_aus_weite = solve(reichweite, (v0, a, g, h, R))
+            res_aus_weite, index, name = solve(reichweite, (v0, a, g, h, R))
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
         try:
-            res_aus_hoehe = solve(maximale_hoehe, (v0, a, g, h, h_m))
+            res_aus_hoehe, index, name = solve(maximale_hoehe, (v0, a, g, h, h_m))
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
+
 
 
 
