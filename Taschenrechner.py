@@ -369,10 +369,11 @@ def flugbahn(werte, felder_dic):
     g = 9.80665
     h = (werte["Anfangshöhe"], "h")
     v0 = (werte["Anfangsgeschwindigkeit"], "v0")
-    a  = (werte["Abwurfwinkel"], "a")
-    t  = (werte["Flugzeit"], "t")
+    a = (werte["Abwurfwinkel"], "a")
+    t = (werte["Flugzeit"], "t")
     R = (werte["Distanz"], "R")
     h_m = (werte["maximale Höhe"], "h_m")
+    param_list = [h, v0, a, t, R, h_m]
 
     def solve(f, args):
         i = args.index(None)
@@ -382,27 +383,35 @@ def flugbahn(werte, felder_dic):
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
     def flugzeit(v0, a, g, h, t):
-        return (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h)) - t
+        return (v0[0] * sin(a[0]) + sqrt((v0[0]*sin(a[0]))**2 + 2*g*h[0])) - t[0]
 
     def reichweite(v0, a, g, h, R):
-        return (v0*cos(a) * (v0 * sin(a) + sqrt((v0*sin(a))**2 + 2*g*h))/g) - R
+        return (v0[0]*cos(a[0]) * (v0[0] * sin(a[0]) + sqrt((v0[0]*sin(a[0]))**2 + 2*g*h[0]))/g) - R[0]
 
     def maximale_hoehe(v0, a, g, h, h_m):
-        return (h + (v0*cos(a)**2) / (2*g)) - h_m
+        return (h[0] + (v0[0]*cos(a[0])**2) / (2*g)) - h_m[0]
 
     for j in range(3):
         try:
-            res_aus_zeit, index, name = solve(flugzeit, (v0, a, g, h, t))
-
+            res_aus_zeit, index, name = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
+            for param in param_list:
+                if param[1] == name:
+                    param = res_aus_zeit
 
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
         try:
-            res_aus_weite, index, name = solve(reichweite, (v0, a, g, h, R))
+            res_aus_weite, index, name = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
+            for param in param_list:
+                if param[1] == name:
+                    param = res_aus_weite
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
         try:
-            res_aus_hoehe, index, name = solve(maximale_hoehe, (v0, a, g, h, h_m))
+            res_aus_hoehe, index, name = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_m[0]))
+            for param in param_list:
+                if param[1] == name:
+                    param = res_aus_hoehe
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
 
@@ -957,7 +966,7 @@ class Page11(tk.Frame):
         def solve_and_show():
             werte = {}
             for key, widget in felder_dic.items():
-                eintrag_feld = widget.get("1.0", "end-1c")
+                eintrag_feld = float(widget.get("1.0", "end-1c"))
                 werte[key] = eintrag_feld
             flugbahn(werte, felder_dic)
 
