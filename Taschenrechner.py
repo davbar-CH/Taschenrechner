@@ -396,7 +396,7 @@ def flugbahn(werte, felder_dic):
             res_aus_zeit, index, name = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
             for param in param_list:
                 if param[1] == name:
-                    param = res_aus_zeit
+                    res_aus_zeit = param
 
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
@@ -966,7 +966,11 @@ class Page11(tk.Frame):
         def solve_and_show():
             werte = {}
             for key, widget in felder_dic.items():
-                eintrag_feld = float(widget.get("1.0", "end-1c"))
+                eintrag_feld = widget.get("1.0", "end-1c")
+                if eintrag_feld != '':
+                    eintrag_feld = float(eintrag_feld)
+                if eintrag_feld == '':
+                    eintrag_feld = None
                 werte[key] = eintrag_feld
             flugbahn(werte, felder_dic)
 
