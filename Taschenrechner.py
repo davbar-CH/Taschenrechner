@@ -373,42 +373,49 @@ def flugbahn(werte, felder_dic):
     t = (werte["Flugzeit"], "t")
     R = (werte["Distanz"], "R")
     h_m = (werte["maximale Höhe"], "h_m")
-    param_list = [h, v0, a, t, R, h_m]
+    pflicht_param_list = [h[0], v0[0], a[0]]
+    optional_param_list = [t[0], R[0], h_m[0]]
+
+    # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
+    def flugzeit(v0, a, g, h, t):
+        a = np.deg2rad(a)
+        x = v0 * np.sin(a)
+        return ((x + np.sqrt(x ** 2 + (2 * g * h))) / g) - t
+
+    def reichweite(v0, a, g, h, R):
+        a = np.deg2rad(a)
+        t = flugzeit(v0, a, g, h, 0)
+        return (v0 * np.cos(a) * t) - R
+
+    def maximale_hoehe(v0, a, g, h, h_m):
+        a = np.deg2rad(a)
+        return (h + ((v0 * np.sin(a)) ** 2) / (2 * g)) - h_m
 
     def solve(f, args):
         i = args.index(None)
         sig = inspect.signature(f)
         param_name = list(sig.parameters.keys())[i]
-        return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), i, param_name
-
-    # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
-    def flugzeit(v0, a, g, h, t):
-        return (v0[0] * sin(a[0]) + sqrt((v0[0]*sin(a[0]))**2 + 2*g*h[0])) - t[0]
-
-    def reichweite(v0, a, g, h, R):
-        return (v0[0]*cos(a[0]) * (v0[0] * sin(a[0]) + sqrt((v0[0]*sin(a[0]))**2 + 2*g*h[0]))/g) - R[0]
-
-    def maximale_hoehe(v0, a, g, h, h_m):
-        return (h[0] + (v0[0]*cos(a[0])**2) / (2*g)) - h_m[0]
+        return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), param_name
 
     for j in range(3):
+        i = 0
         try:
-            res_aus_zeit, index, name = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
-            for param in param_list:
-                if param[1] == name:
-                    res_aus_zeit = param
-
+            if pflicht_param_list.count(None) > 1 and optional_param_list.count(None) > 1:
+                print("Es fehlt ein Parameter")
+            if pflicht_param_list.count(None) < 1:
+                res_aus_zeit, name = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
+        #hier anzeige dann
         except Exception as e:
-            print(f"Es fehlt eine Angabe:{e}")
+            print(f"Du hast Mist gebaut:{e}")
         try:
-            res_aus_weite, index, name = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
+            res_aus_weite, name = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
             for param in param_list:
                 if param[1] == name:
                     param = res_aus_weite
         except Exception as e:
             print(f"Es fehlt eine Angabe:{e}")
         try:
-            res_aus_hoehe, index, name = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_m[0]))
+            res_aus_hoehe, name = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_m[0]))
             for param in param_list:
                 if param[1] == name:
                     param = res_aus_hoehe
