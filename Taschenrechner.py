@@ -367,15 +367,16 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 def flugbahn(werte, felder_dic):
     #labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
+
     h = (werte["h"], "h")
     v0 = (werte["v0"], "v0")
     a = (werte["a"], "a")
     t = (werte["t"], "t")
     R = (werte["R"], "R")
     h_max = (werte["h_max"], "h_max")
+
     pflicht_param_list = [h[0], v0[0], a[0]]
     optional_param_list = [t[0], R[0], h_max[0]]
-
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
     def flugzeit(v0, a, g, h, t):
@@ -398,44 +399,48 @@ def flugbahn(werte, felder_dic):
         param_name = list(sig.parameters.keys())[i]
         return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), param_name
 
+    optionale_werte = {
+        "t": t,
+        "R": R,
+        "h_max": h_max,
+    }
+
+    optionale_formeln = {
+        "t": flugzeit,
+        "R": reichweite,
+        "h_max": maximale_hoehe,
+    }
+    fehlende_pflicht = pflicht_param_list.count(None)
+    fehlende_optional = optional_param_list.count(None)
     try:
-        if pflicht_param_list.count(None) > 1 and optional_param_list.count(None) > 1:
-            print("Es fehlt ein Parameter")
-        if pflicht_param_list.count(None) == 0:
-            res_aus_zeit, name_zeit = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
-            res_aus_weite, name_weite = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
-            res_aus_hoehe, name_hoehe = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_max[0]))
+        if fehlende_pflicht > 1:
+            print("Es fehlt ein Parameter: v0, a oder h")
 
-            for param_name in werte.keys():
-                if param_name == name_zeit:
-                    werte[param_name] = res_aus_zeit
-                    print(werte[name_zeit])
+        if fehlende_pflicht == 0:
+            ergebnisse = [
+                solve(flugzeit, (v0[0], a[0], g, h[0], t[0])),
+                solve(reichweite, (v0[0], a[0], g, h[0], R[0])),
+                solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_max[0]))
+            ]
 
-            for param_name in werte.keys():
-                if param_name == name_weite:
-                    werte[param_name] = res_aus_weite
-                    print(werte[name_weite])
+            for res, name in ergebnisse:
+                if name in werte:
+                    werte[name] = res
+                    print(werte[name])
 
-            for param_name in werte.keys():
-                if param_name == name_hoehe:
-                    werte[param_name] = res_aus_hoehe
-                    print(werte[name_hoehe])
+        if fehlende_pflicht == 1 and fehlende_optional < 3:
 
-        if pflicht_param_list.count(None) < 1 < optional_param_list.count(None):
-            try:
-                res_aus_zeit, name = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
-            except Exception as e:
-                print(f"Du hast Mist gebaut:{e}")
-    #hier anzeige dann
-    except Exception as e:
-        print(f"Du hast Mist gebaut:{e}")
-        res_aus_weite, name = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
-    try:
-        res_aus_hoehe, name = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_max[0]))
+            for name, wert in optionale_werte.items():
+                if wert[0] is not None:
+                    res, _ = solve(
+                        optionale_formeln[name],
+                        (v0[0], a[0], g, h[0], wert[0])
+                    )
+                    wert[0] = res   # macht keinen sinn
+                    print(f"{name} berechnet: {res}")
 
     except Exception as e:
-        print(f"Es fehlt eine Angabe:{e}")
-
+        print(f"Du hast Mist gebaut, David:{e}")
 
 # to do vektor save
 class tkinterApp(tk.Tk):
