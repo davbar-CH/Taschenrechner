@@ -367,14 +367,15 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
 def flugbahn(werte, felder_dic):
     #labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
-    h = (werte["Anfangshöhe"], "h")
-    v0 = (werte["Anfangsgeschwindigkeit"], "v0")
-    a = (werte["Abwurfwinkel"], "a")
-    t = (werte["Flugzeit"], "t")
-    R = (werte["Distanz"], "R")
-    h_m = (werte["maximale Höhe"], "h_m")
+    h = (werte["h"], "h")
+    v0 = (werte["v0"], "v0")
+    a = (werte["a"], "a")
+    t = (werte["t"], "t")
+    R = (werte["R"], "R")
+    h_max = (werte["h_max"], "h_max")
     pflicht_param_list = [h[0], v0[0], a[0]]
-    optional_param_list = [t[0], R[0], h_m[0]]
+    optional_param_list = [t[0], R[0], h_max[0]]
+
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
     def flugzeit(v0, a, g, h, t):
@@ -387,9 +388,9 @@ def flugbahn(werte, felder_dic):
         t = flugzeit(v0, a, g, h, 0)
         return (v0 * np.cos(a) * t) - R
 
-    def maximale_hoehe(v0, a, g, h, h_m):
+    def maximale_hoehe(v0, a, g, h, h_max):
         a = np.deg2rad(a)
-        return (h + ((v0 * np.sin(a)) ** 2) / (2 * g)) - h_m
+        return (h + (v0**2 * np.sin(a)** 2) / (2 * g)) - h_max
 
     def solve(f, args):
         i = args.index(None)
@@ -397,32 +398,43 @@ def flugbahn(werte, felder_dic):
         param_name = list(sig.parameters.keys())[i]
         return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), param_name
 
-    for j in range(3):
-        i = 0
-        try:
-            if pflicht_param_list.count(None) > 1 and optional_param_list.count(None) > 1:
-                print("Es fehlt ein Parameter")
-            if pflicht_param_list.count(None) < 1:
+    try:
+        if pflicht_param_list.count(None) > 1 and optional_param_list.count(None) > 1:
+            print("Es fehlt ein Parameter")
+        if pflicht_param_list.count(None) == 0:
+            res_aus_zeit, name_zeit = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
+            res_aus_weite, name_weite = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
+            res_aus_hoehe, name_hoehe = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_max[0]))
+
+            for param_name in werte.keys():
+                if param_name == name_zeit:
+                    werte[param_name] = res_aus_zeit
+                    print(werte[name_zeit])
+
+            for param_name in werte.keys():
+                if param_name == name_weite:
+                    werte[param_name] = res_aus_weite
+                    print(werte[name_weite])
+
+            for param_name in werte.keys():
+                if param_name == name_hoehe:
+                    werte[param_name] = res_aus_hoehe
+                    print(werte[name_hoehe])
+
+        if pflicht_param_list.count(None) < 1 < optional_param_list.count(None):
+            try:
                 res_aus_zeit, name = solve(flugzeit, (v0[0], a[0], g, h[0], t[0]))
-        #hier anzeige dann
-        except Exception as e:
-            print(f"Du hast Mist gebaut:{e}")
-        try:
-            res_aus_weite, name = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
-            for param in param_list:
-                if param[1] == name:
-                    param = res_aus_weite
-        except Exception as e:
-            print(f"Es fehlt eine Angabe:{e}")
-        try:
-            res_aus_hoehe, name = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_m[0]))
-            for param in param_list:
-                if param[1] == name:
-                    param = res_aus_hoehe
-        except Exception as e:
-            print(f"Es fehlt eine Angabe:{e}")
+            except Exception as e:
+                print(f"Du hast Mist gebaut:{e}")
+    #hier anzeige dann
+    except Exception as e:
+        print(f"Du hast Mist gebaut:{e}")
+        res_aus_weite, name = solve(reichweite, (v0[0], a[0], g, h[0], R[0]))
+    try:
+        res_aus_hoehe, name = solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_max[0]))
 
-
+    except Exception as e:
+        print(f"Es fehlt eine Angabe:{e}")
 
 
 # to do vektor save
@@ -960,7 +972,7 @@ class Page11(tk.Frame):
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(StartPage))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
-        labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
+        labels = ["h", "v0", "a", "t", "R", "h_max"]
         felder_dic = {}
 
         for col in range(1, 7):
