@@ -364,7 +364,9 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
-def flugbahn(werte, felder_dic):
+def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
+    anzeige_fehler.delete(1.0, END)
+    anzeige_res.delete(1.0, END)
     #labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
 
@@ -377,6 +379,7 @@ def flugbahn(werte, felder_dic):
 
     pflicht_param_list = [h[0], v0[0], a[0]]
     optional_param_list = [t[0], R[0], h_max[0]]
+    alle_param_list = [h,v0,a,t,R,h_max]
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
     def flugzeit(v0, a, g, h, t):
@@ -385,8 +388,8 @@ def flugbahn(werte, felder_dic):
         return ((x + np.sqrt(x ** 2 + (2 * g * h))) / g) - t
 
     def reichweite(v0, a, g, h, R):
-        a = np.deg2rad(a)
         t = flugzeit(v0, a, g, h, 0)
+        a = np.deg2rad(a)
         return (v0 * np.cos(a) * t) - R
 
     def maximale_hoehe(v0, a, g, h, h_max):
@@ -410,11 +413,12 @@ def flugbahn(werte, felder_dic):
         "R": reichweite,
         "h_max": maximale_hoehe,
     }
+
     fehlende_pflicht = pflicht_param_list.count(None)
     fehlende_optional = optional_param_list.count(None)
     try:
-        if fehlende_pflicht > 1:
-            print("Es fehlt ein Parameter: v0, a oder h")
+        if (fehlende_pflicht >= 1 and fehlende_optional == 3) or (fehlende_pflicht == 2):
+            anzeige_fehler.insert(END, "Es fehlt ein Parameter: v0, a oder h")
 
         if fehlende_pflicht == 0:
             ergebnisse = [
@@ -426,18 +430,24 @@ def flugbahn(werte, felder_dic):
             for res, name in ergebnisse:
                 if name in werte:
                     werte[name] = res
-                    print(werte[name])
+                    print(f"{name} berechnet: {res}")
+                    felder_dic[name].insert(END, f"{res}")
 
         if fehlende_pflicht == 1 and fehlende_optional < 3:
+            try:
+                for name, wert in optionale_werte.items():
+                    if wert[0] is not None:
+                        res, name = solve(optionale_formeln[name],(v0[0], a[0], g, h[0], wert[0]))
 
-            for name, wert in optionale_werte.items():
-                if wert[0] is not None:
-                    res, _ = solve(
-                        optionale_formeln[name],
-                        (v0[0], a[0], g, h[0], wert[0])
-                    )
-                    wert[0] = res   # macht keinen sinn
-                    print(f"{name} berechnet: {res}")
+                        for param_name in alle_param_list:
+                            if param_name[1] == name:
+                                werte[name] = res
+
+                        print(f"{name} berechnet: {res}")
+                        if RuntimeWarning:
+                            anzeige_fehler.insert(END, "Physikalisch nicht möglich, heieiei")
+            except RuntimeWarning:
+                anzeige_fehler.insert(END, "Physikalisch nicht möglich, heieiei")
 
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
@@ -967,6 +977,7 @@ class Page10(tk.Frame):
         plot_button = ttk.Button(self, text="Plot", command=anplot)
         plot_button.grid(row=4, column=1, padx=10, pady=10)
 
+# Flugbahn
 class Page11(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -982,10 +993,16 @@ class Page11(tk.Frame):
 
         for col in range(1, 7):
             bezeichnung = tk.Label(self, text=labels[col-1])
-            bezeichnung.grid(row=2, column=1+col, padx=10, pady=10, sticky="w")
-            entry = tk.Text(self, height=1, width=10, bg="light cyan")
-            entry.grid(row=3, column=1+col, padx=10, pady=10, sticky="w")
-            felder_dic.update({labels[col-1]: entry})
+            bezeichnung.grid(row=3, column=1+col, padx=10, pady=10, sticky="w")
+            anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
+            anzeige_res.grid(row=4, column=1+col, padx=10, sticky="w")
+            felder_dic.update({labels[col-1]: anzeige_res})
+
+        anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
+        anzeige_fehler.grid(row=1, column=4)
+
+        label = ttk.Label(self, text="Fehlermeldung-Box")
+        label.grid(row=1, column=3, padx=10, pady=10)
 
         def solve_and_show():
             werte = {}
@@ -996,7 +1013,7 @@ class Page11(tk.Frame):
                 if eintrag_feld == '':
                     eintrag_feld = None
                 werte[key] = eintrag_feld
-            flugbahn(werte, felder_dic)
+            flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic)
 
 
         solv_button = ttk.Button(self, text="solv", command=solve_and_show)
