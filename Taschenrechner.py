@@ -116,7 +116,6 @@ def ableitung(funktion_expr, n_ableitung_int, anzeige):
 
 
 def kurvendiskussion(funktion, anzeige):
-
     def extremstelle(funktion):
         # extremstelle
         x = Symbol('x')
@@ -182,10 +181,14 @@ def integrale(funktion, anzeige, a, b):
     area = sympy.integrate(funktion, (x, a, b))
     anzeige.insert(END, f"Die Fläche unter der Funktion{funktion} ist:{area}" + "\n")
 
+
 # speicher, falls man einen Vektor behalten möchte
 speicher_dic = {}
+
+
 def vektorgeometrie(values, float_values, anzeige, befehl):
     anzeige.delete(1.0, END)
+
     def vektoren_einlesen(values, float_values):
         a_vektor = b_vektor = c_vektor = d_vektor = None
 
@@ -302,8 +305,8 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
     def ebene(vektor1, vektor2, punkt_wert):
         kreuzprodukt = np.cross(vektor1, vektor2)
         print(type(kreuzprodukt))
-        if type(kreuzprodukt) == np.ndarray:
-            d = -kreuzprodukt[0]*punkt_wert[0] + kreuzprodukt[1]*punkt_wert[1] + kreuzprodukt[2]*punkt_wert[2]
+        if type(kreuzprodukt) is np.ndarray:
+            d = -kreuzprodukt[0] * punkt_wert[0] + kreuzprodukt[1] * punkt_wert[1] + kreuzprodukt[2] * punkt_wert[2]
             ebene_zwei = f"x:{kreuzprodukt[0]} y:{kreuzprodukt[1]} z:{kreuzprodukt[2]} + {d}"
             return ebene_zwei
         else:
@@ -325,7 +328,6 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
                 speicher = re.search(r"(\b[S-Z]+\b)", string=befehl)
                 (werte, namen) = speicher_dic[speicher]
                 anzeige.insert(END, f"{namen[0]} ist {werte[0]}\n")
-
 
     if art == "mehrfach":
         if operation == "sp":
@@ -364,10 +366,10 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
-def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
-    anzeige_fehler.delete(1.0, END)
-    anzeige_res.delete(1.0, END)
-    #labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
+
+def flugbahn(werte, anzeige_fehler, felder_dic):
+
+    # labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
 
     h = (werte["h"], "h")
@@ -379,7 +381,7 @@ def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
 
     pflicht_param_list = [h[0], v0[0], a[0]]
     optional_param_list = [t[0], R[0], h_max[0]]
-    alle_param_list = [h,v0,a,t,R,h_max]
+    alle_param_list = [h, v0, a, t, R, h_max]
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
     def flugzeit(v0, a, g, h, t):
@@ -394,7 +396,7 @@ def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
 
     def maximale_hoehe(v0, a, g, h, h_max):
         a = np.deg2rad(a)
-        return (h + (v0**2 * np.sin(a)** 2) / (2 * g)) - h_max
+        return (h + (v0 ** 2 * np.sin(a) ** 2) / (2 * g)) - h_max
 
     def solve(f, args):
         i = args.index(None)
@@ -416,7 +418,7 @@ def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
 
     fehlende_pflicht = pflicht_param_list.count(None)
     fehlende_optional = optional_param_list.count(None)
-    try:
+    try: # was, wenn ich keine parameter habe?
         if (fehlende_pflicht >= 1 and fehlende_optional == 3) or (fehlende_pflicht == 2):
             anzeige_fehler.insert(END, "Es fehlt ein Parameter: v0, a oder h")
 
@@ -430,20 +432,21 @@ def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
             for res, name in ergebnisse:
                 if name in werte:
                     werte[name] = res
-                    print(f"{name} berechnet: {res}")
-                    felder_dic[name].insert(END, f"{res}")
+                    print(f"{name} berechnet: {res[0]}")
+                    felder_dic[name].insert(END, f"{res[0]}")
 
         if fehlende_pflicht == 1 and fehlende_optional < 3:
             try:
                 for name, wert in optionale_werte.items():
                     if wert[0] is not None:
-                        res, name = solve(optionale_formeln[name],(v0[0], a[0], g, h[0], wert[0]))
+                        res, name = solve(optionale_formeln[name], (v0[0], a[0], g, h[0], wert[0]))
 
                         for param_name in alle_param_list:
                             if param_name[1] == name:
                                 werte[name] = res
 
                         print(f"{name} berechnet: {res}")
+                        felder_dic[name].insert(END, f"{res[0]}")
                         if RuntimeWarning:
                             anzeige_fehler.insert(END, "Physikalisch nicht möglich, heieiei")
             except RuntimeWarning:
@@ -451,6 +454,7 @@ def flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic):
 
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
+
 
 # to do vektor save
 class tkinterApp(tk.Tk):
@@ -514,7 +518,8 @@ class StartPage(tk.Frame):
         vektor_button = Button(self, height=2, width=20, text="Vektoren", command=lambda: controller.show_frame(Page4))
         vektor_button.grid(row=1, column=2, padx=10, pady=10)
 
-        flugbahn_button = Button(self, height=2, width=20, text="Flugbahn", command=lambda: controller.show_frame(Page11))
+        flugbahn_button = Button(self, height=2, width=20, text="Flugbahn",
+                                 command=lambda: controller.show_frame(Page11))
         flugbahn_button.grid(row=2, column=2, padx=10, pady=10)
 
 
@@ -560,6 +565,7 @@ class Page2(tk.Frame):
         button3 = Button(self, height=2, width=20, text="Integrale", command=lambda: controller.show_frame(Page10))
         button3.grid(row=3, column=1, padx=10, pady=10)
 
+
 # cheat sheet
 class Page3(tk.Frame):
     def __init__(self, parent, controller):
@@ -595,6 +601,7 @@ class Page3(tk.Frame):
         listbox.insert(6, "Vektor speichern: Grossbuchstabe von S bis Z")
 
         listbox.grid(row=5, column=4, padx=10, pady=10)
+
 
 # Vektoren
 class Page4(tk.Frame):
@@ -917,6 +924,7 @@ class Page9(tk.Frame):
         toolbar.update()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+
 # Integrale
 class Page10(tk.Frame):
     def __init__(self, parent, controller):
@@ -977,6 +985,7 @@ class Page10(tk.Frame):
         plot_button = ttk.Button(self, text="Plot", command=anplot)
         plot_button.grid(row=4, column=1, padx=10, pady=10)
 
+
 # Flugbahn
 class Page11(tk.Frame):
     def __init__(self, parent, controller):
@@ -992,11 +1001,11 @@ class Page11(tk.Frame):
         felder_dic = {}
 
         for col in range(1, 7):
-            bezeichnung = tk.Label(self, text=labels[col-1])
-            bezeichnung.grid(row=3, column=1+col, padx=10, pady=10, sticky="w")
+            bezeichnung = tk.Label(self, text=labels[col - 1])
+            bezeichnung.grid(row=3, column=1 + col, padx=10, pady=10, sticky="w")
             anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
-            anzeige_res.grid(row=4, column=1+col, padx=10, sticky="w")
-            felder_dic.update({labels[col-1]: anzeige_res})
+            anzeige_res.grid(row=4, column=1 + col, padx=10, sticky="w")
+            felder_dic.update({labels[col - 1]: anzeige_res})
 
         anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
         anzeige_fehler.grid(row=1, column=4)
@@ -1013,11 +1022,14 @@ class Page11(tk.Frame):
                 if eintrag_feld == '':
                     eintrag_feld = None
                 werte[key] = eintrag_feld
-            flugbahn(werte, anzeige_fehler, anzeige_res, felder_dic)
-
+            flugbahn(werte, anzeige_fehler, felder_dic)
 
         solv_button = ttk.Button(self, text="solv", command=solve_and_show)
         solv_button.grid(row=1, column=5, padx=10, pady=10)
+
+        """clear_button = ttk.Button(self, text="solv", command=lambda labels: for name in labels:felder_dic[name].delete(1.0, END))
+        clear_button.grid(row=1, column=6, padx=10, pady=10)"""
+
 
 # Driver Code
 app = tkinterApp()
