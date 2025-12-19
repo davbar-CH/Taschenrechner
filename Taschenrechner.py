@@ -1024,11 +1024,19 @@ class Page11(tk.Frame):
                 werte[key] = eintrag_feld
             flugbahn(werte, anzeige_fehler, felder_dic)
 
+        preset_button = ttk.Button(self, text="presets")
+        preset_button.grid(row=5, column=1, padx=10, pady=10)
+
         solv_button = ttk.Button(self, text="solv", command=solve_and_show)
         solv_button.grid(row=1, column=5, padx=10, pady=10)
 
-        """clear_button = ttk.Button(self, text="solv", command=lambda labels: for name in labels:felder_dic[name].delete(1.0, END))
-        clear_button.grid(row=1, column=6, padx=10, pady=10)"""
+        def clear():
+            for name in labels:
+                felder_dic[name].delete("1.0", END)
+            anzeige_fehler.delete("1.0", END)
+
+        clear_button = ttk.Button(self, text="clear", command=clear)
+        clear_button.grid(row=1, column=6, padx=10, pady=10)
 
 
 # Driver Code
