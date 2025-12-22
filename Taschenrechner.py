@@ -476,7 +476,7 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11):
+        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -1024,7 +1024,7 @@ class Page11(tk.Frame):
                 werte[key] = eintrag_feld
             flugbahn(werte, anzeige_fehler, felder_dic)
 
-        preset_button = ttk.Button(self, text="presets")
+        preset_button = ttk.Button(self, text="presets", command=lambda: controller.show_frame(Page12))
         preset_button.grid(row=5, column=1, padx=10, pady=10)
 
         solv_button = ttk.Button(self, text="solv", command=solve_and_show)
@@ -1038,6 +1038,39 @@ class Page11(tk.Frame):
         clear_button = ttk.Button(self, text="clear", command=clear)
         clear_button.grid(row=1, column=6, padx=10, pady=10)
 
+
+class Page12(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller  # Speichern des Controllers als Instanzvariable
+        label = ttk.Label(self, text="Cheat Sheet")
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        listbox = Listbox(self, height=7,
+                          width=40,
+                          bg="light cyan",
+                          activestyle='dotbox',
+                          font="Arial",
+                          fg="black")
+
+        # Define a label for the list.
+        label1 = Label(self, text="Übersicht der verschiedenen Einstellungen")
+        label1.grid(row=1, column=4, padx=10, pady=10)
+
+        # insert elements by their
+        # index and names.
+        listbox.insert(1, "Speer, 0.8kg, Durchmesser 0.03m, cw = 0.5")
+        listbox.insert(2, "Mehrere Vektoren: A-B und B-C")
+        listbox.insert(3, "Kreuzprodukt: A-B kp B-C")
+        listbox.insert(4, "Skalarprodukt: A-B sp B-C")
+        listbox.insert(5, "Ebene: A-B ebene B-C")
+        listbox.insert(5, "Winkel: A-B winkel B-C")
+        listbox.insert(6, "Vektor speichern: Grossbuchstabe von S bis Z")
+
+        listbox.grid(row=5, column=4, padx=10, pady=10)
 
 # Driver Code
 app = tkinterApp()
