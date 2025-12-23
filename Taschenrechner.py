@@ -1043,13 +1043,13 @@ class Page12(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Cheat Sheet")
+        label = ttk.Label(self, text="Presets")
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
-        listbox = Listbox(self, height=7,
+        listbox = Listbox(self, height=9,
                           width=40,
                           bg="light cyan",
                           activestyle='dotbox',
@@ -1062,15 +1062,24 @@ class Page12(tk.Frame):
 
         # insert elements by their
         # index and names.
-        listbox.insert(1, "Speer, 0.8kg, Durchmesser 0.03m, cw = 0.5")
-        listbox.insert(2, "Mehrere Vektoren: A-B und B-C")
-        listbox.insert(3, "Kreuzprodukt: A-B kp B-C")
-        listbox.insert(4, "Skalarprodukt: A-B sp B-C")
-        listbox.insert(5, "Ebene: A-B ebene B-C")
-        listbox.insert(5, "Winkel: A-B winkel B-C")
-        listbox.insert(6, "Vektor speichern: Grossbuchstabe von S bis Z")
+        listbox.insert(1, "Speer") # 0.8kg, Durchmesser 0.03m, cw = 0.5
+        listbox.insert(2, "Football") # 0.4252kg, Durchmesser 0.54m, cw = 0.25
+        listbox.insert(3, "Die Leiden des jungen Werthers (offen)") #0.204kg, 0.248m (offen), cw = 1.17
+        listbox.insert(4, "T-34/85 Schuss")# 9.21 kg, Durchmesser 0.85 m, v0 = 792 m/s, cw = 0.3
+        listbox.insert(5, "Typ 91 Yamato-Schlachtschiff Munition") #1458 kg, Durchmesser 0.46 m, v0 = 780 m/s, cw = 0.3
+        listbox.insert(6, "Medizinball")# 5kg, Durchmesser 0.3m, cw = 0.47
+        listbox.insert(8, "Stuhl, Mensa")# 4.9 kg, 0.210375m^2, cw = 1.5
+        listbox.insert(9, "Lehrer") # 80kg, 0.95m^2, cw = 1.15
 
         listbox.grid(row=5, column=4, padx=10, pady=10)
+
+        def selected_item():
+
+            for i in listbox.curselection():
+                print(listbox.get(i))
+
+        select_knopf = ttk.Button(self, text="auswählen", command=selected_item)
+        select_knopf.grid(row=11, column=1, padx=10, pady=10)
 
 # Driver Code
 app = tkinterApp()
