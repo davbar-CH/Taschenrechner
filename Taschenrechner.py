@@ -150,7 +150,7 @@ def kurvendiskussion(funktion, anzeige):
 
     def symmetrien(funktion, anzeige):
         x = Symbol("x")
-        print(-1 * funktion)
+
         if funktion == funktion.subs(x, -x):
             anzeige.insert(END, "Symmetrisch zur y-Achse" + "\n")
         elif funktion == -1 * (funktion.subs(x, -x)):
@@ -366,8 +366,24 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
+def spulen_beschleunigung():
+    r_Kugel = int(input("Radius Kugel:"))
+    u_permea_vakuum = 1.256637061 * (10**-6)
+    u_permea_relativ = int(input("relative Permeabilitätszahl:"))
 
-def flugbahn(werte, anzeige_fehler, felder_dic):
+    if u_permea_relativ is None or u_permea_relativ == 0:
+        u_permea_relativ = 5150
+
+    N_windungen = int(input("Anzahl Windungen:"))
+    I = int(input("Stromstärke:"))
+    r_spule = int(input("Radius Spule:"))
+    l = int(input("Länge der Spule:"))
+
+    z = sympy.symbols("z")
+    f_z = ((-1) * np.pi * (r_Kugel**3) * u_permea_vakuum * (u_permea_relativ - 1) *
+           (N_windungen**2) * (I**2) * (r_spule ** 4) * (z / ((z**2) + (r_spule**2))**4))
+
+def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
 
     # labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
@@ -455,7 +471,25 @@ def flugbahn(werte, anzeige_fehler, felder_dic):
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
 
+def flugbahn_mit_widerstand():
+    g = 9.80665
 
+    luftdichte = (werte["rho"], "rho")
+    cw_wert =  (werte["cw"], "cw")
+    querschnitt = (werte["A"], "A")
+    masse = (werte["m"], "m")
+
+    h = (werte["h"], "h")
+    v0 = (werte["v0"], "v0")
+    a = (werte["a"], "a")
+
+    k = (cw_wert[0] * querschnitt[0]  * luftdichte[0]) / (2 * masse[0])
+    v_grenz = np.sqrt(g / k)
+
+    h_max = ((v_grenz**2) / (2*g)) * np.log(1+((v0[0]**2) / (v_grenz**2)))
+
+    steigzeit = (v_grenz/g) * np.arctan(v0[0]/v_grenz)
+    fallzeit = (v_grenz/g) * np.arccosh(np.exp((h_max * g) / (v_grenz**2)))
 # to do vektor save
 class tkinterApp(tk.Tk):
 
@@ -476,7 +510,7 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12):
+        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12, Page13):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -571,7 +605,7 @@ class Page3(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Cheat Sheet")
+        label = ttk.Label(self, text="Cheat Sheet", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page4))
@@ -608,7 +642,7 @@ class Page4(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = ttk.Label(self, text="Vektoren")
+        label = ttk.Label(self, text="Vektoren", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
@@ -677,7 +711,7 @@ class Page4(tk.Frame):
 class Page5(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="2x2")
+        label = ttk.Label(self, text="2x2", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
@@ -723,7 +757,7 @@ class Page5(tk.Frame):
 class Page6(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="3x3")
+        label = ttk.Label(self, text="3x3", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
@@ -770,7 +804,7 @@ class Page6(tk.Frame):
 class Page7(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="4x4")
+        label = ttk.Label(self, text="4x4", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
@@ -819,7 +853,7 @@ class Page8(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Kürven diskutieren")
+        label = ttk.Label(self, text="Kürven diskutieren", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page2))
@@ -871,7 +905,7 @@ class Page9(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = ttk.Label(self, text="Graph")
+        label = ttk.Label(self, text="Graph", font=("Arial",15))
         label.pack()
 
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
@@ -879,7 +913,7 @@ class Page9(tk.Frame):
 
         # Frame für den Plot
         self.plot_frame = tk.Frame(self)
-        self.plot_frame.pack(fill=tk.BOTH, expand=True)
+        self.plot_frame.pack(fill="both", expand=True)
 
     def plot(self, funktion_expr, d_oder_i, *args, **kwargs):
         # Clear previous plot if it exists
@@ -930,7 +964,7 @@ class Page10(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Integrale")
+        label = ttk.Label(self, text="Integrale", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page2))
@@ -991,7 +1025,7 @@ class Page11(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Flugbahn")
+        label = ttk.Label(self, text="Flugbahn", font=("Arial",15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(StartPage))
@@ -1022,10 +1056,13 @@ class Page11(tk.Frame):
                 if eintrag_feld == '':
                     eintrag_feld = None
                 werte[key] = eintrag_feld
-            flugbahn(werte, anzeige_fehler, felder_dic)
+            flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic)
 
         preset_button = ttk.Button(self, text="presets", command=lambda: controller.show_frame(Page12))
         preset_button.grid(row=5, column=1, padx=10, pady=10)
+
+        spulen_flugbahn = Button(self, height=2, width=20, text="Flugbahn aus Spulen", command=lambda: controller.show_frame(Page13))
+        spulen_flugbahn.grid(row=6, column=1, padx=10, pady=10)
 
         solv_button = ttk.Button(self, text="solv", command=solve_and_show)
         solv_button.grid(row=1, column=5, padx=10, pady=10)
@@ -1066,7 +1103,6 @@ class Page12(tk.Frame):
         listbox.insert(2, "Football") # 0.4252kg, Durchmesser 0.54m, cw = 0.25
         listbox.insert(3, "Die Leiden des jungen Werthers (offen)") #0.204kg, 0.248m (offen), cw = 1.17
         listbox.insert(4, "T-34/85 Schuss")# 9.21 kg, Durchmesser 0.85 m, v0 = 792 m/s, cw = 0.3
-        listbox.insert(5, "Typ 91 Yamato-Schlachtschiff Munition") #1458 kg, Durchmesser 0.46 m, v0 = 780 m/s, cw = 0.3
         listbox.insert(6, "Medizinball")# 5kg, Durchmesser 0.3m, cw = 0.47
         listbox.insert(8, "Stuhl, Mensa")# 4.9 kg, 0.210375m^2, cw = 1.5
         listbox.insert(9, "Lehrer") # 80kg, 0.95m^2, cw = 1.15
@@ -1080,7 +1116,90 @@ class Page12(tk.Frame):
 
         select_knopf = ttk.Button(self, text="auswählen", command=selected_item)
         select_knopf.grid(row=11, column=1, padx=10, pady=10)
+        # to do, dass presets funktionieren
 
+class Page13(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller  # Speichern des Controllers als Instanzvariable
+        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn",font=("Arial",15))
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        self.funktion_var = tk.StringVar()
+        self.funktion_var.trace_add("write", self.update_plot)
+
+
+        # ---------- Plot-Bereich ----------
+        # Kraft auf die Kugel Diagramm
+        label_plot1 = ttk.Label(self, text="Kraft auf die Kugel")
+        label_plot1.grid(row=1, column=5)
+
+        self.plot_frame_1 = tk.Frame(self)
+        self.plot_frame_1.grid(row=2, column=5, rowspan=5,columnspan=5)
+
+        self.fig_1 = Figure(figsize=(5, 2), dpi=100)
+        self.ax_1 = self.fig_1.add_subplot(111)
+
+        self.canvas_1 = FigureCanvasTkAgg(self.fig_1, master=self.plot_frame_1)
+        self.canvas_1.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        self.toolbar_1 = NavigationToolbar2Tk(self.canvas_1, self.plot_frame_1)
+        self.toolbar_1.update()
+
+        label_plot2 = ttk.Label(self, text="Flugbahn der Kugel")
+        label_plot2.grid(row=7, column=5)
+
+        self.plot_frame_2 = tk.Frame(self)
+        self.plot_frame_2.grid(row=8, column=5, rowspan=5, columnspan=5)
+
+
+        self.fig_2 = Figure(figsize=(5, 2), dpi=100)
+        self.ax_2 = self.fig_2.add_subplot(111)
+
+        self.canvas_2 = FigureCanvasTkAgg(self.fig_2, master=self.plot_frame_2)
+        self.canvas_2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
+        self.toolbar_2.update()
+
+        # ---------- Automatisches Update ----------
+
+    def update_plot(self, *args):
+        expr_str = self.funktion_var.get()
+        if not expr_str:
+            return
+
+        try:
+            expr = sympify(expr_str)
+        except:
+            return  # ungültiger Ausdruck → nichts plotten
+
+        self.plot(self.ax_1, self.canvas_1, expr)
+        self.plot(self.ax_2, self.canvas_2, expr)
+
+        # ---------- Plot-Funktion ----------
+
+    def plot(self, ax, canvas, funktion_expr):
+        ax.clear()
+
+        x = Symbol('x')
+        f = lambdify(x, funktion_expr, 'numpy')
+
+        x_vals = np.linspace(-30, 30, 400)
+
+        try:
+            y_vals = f(x_vals)
+        except:
+            y_vals = np.full_like(x_vals, np.nan)
+
+        ax.plot(x_vals, y_vals)
+        ax.grid(True)
+        ax.set_title(f"Plot von {funktion_expr}")
+
+        canvas.draw()
 # Driver Code
 app = tkinterApp()
 app.mainloop()
