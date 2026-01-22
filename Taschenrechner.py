@@ -185,7 +185,6 @@ def integrale(funktion, anzeige, a, b):
 # speicher, falls man einen Vektor behalten möchte
 speicher_dic = {}
 
-
 def vektorgeometrie(values, float_values, anzeige, befehl):
     anzeige.delete(1.0, END)
 
@@ -366,22 +365,25 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
-def spulen_beschleunigung():
-    r_kugel = int(input("Radius Kugel:"))
+def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
+    r_kugel = (werte["r_kugel"], "r_kugel")
     u_permea_vakuum = 1.256637061 * (10**-6)
-    u_permea_relativ = int(input("relative Permeabilitätszahl:"))
+    u_relativ = (werte["u_relativ"], "u_relativ")
 
-    if u_permea_relativ is None or u_permea_relativ == 0:
-        u_permea_relativ = 5150
+    if u_relativ is None or u_relativ == 0:
+        u_relativ = (5150,"u_relativ")
 
-    N_windungen = int(input("Anzahl Windungen:"))
-    I = int(input("Stromstärke:"))
-    r_spule = int(input("Radius Spule:"))
-    l = int(input("Länge der Spule:"))
+    N_windungen = (werte["N_windungen"], "N_windungen")
+    I = (werte["I"], "I")
+    r_spule = (werte["r_spule"], "r_spule")
+    l = (werte["Länge"], "Länge")
 
-    z = sympy.symbols("z")
-    f_z = ((-1) * np.pi * (r_kugel**3) * u_permea_vakuum * (u_permea_relativ - 1) *
-           (N_windungen**2) * (I**2) * (r_spule ** 4) * (z / ((z**2) + (r_spule**2))**4))
+    z = symbols("z")
+
+    f_l = ((-1) * np.pi * (r_kugel[0]**3) * u_permea_vakuum * (u_relativ[0] - 1) *
+           (N_windungen[0]**2) * (I[0]**2) * (r_spule[0] ** 4) * (z / ((z**2) + (r_spule[0]**2))**4))
+
+    return f_l
 
 def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
 
@@ -1121,19 +1123,39 @@ class Page12(tk.Frame):
 class Page13(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn")
-        label.grid(row=0, column=4, padx=10, pady=10)
+        self.controller = controller
+
+        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn", font=("Arial",15))
+        label.grid(row=0, column=9)
+
+        label_fehler = ttk.Label(self, text="Fehlermeldung-Box")
+        label_fehler.grid(row=2, column=2, padx=10, pady=10, sticky="w")
+        self.anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
+        self.anzeige_fehler.grid(row=2, column=3)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
         button1.grid(row=2, column=1, padx=10, pady=10)
 
-        self.funktion_var = tk.StringVar()
-        self.funktion_var.trace_add("write", self.update_plot)
+        self.felder_dic = {}
 
+        # entry-felder
+        labels = ["r_kugel", "u_relativ", "N_windungen", "I", "r_spule", "Länge"]
+
+        for col in range(1, 7):
+            bezeichnung = tk.Label(self, text=labels[col - 1])
+            bezeichnung.grid(row=4, column=col, padx=5, pady=5, sticky="w")
+            anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
+            anzeige_res.grid(row=5, column=col, padx=5, sticky="w")
+
+            anzeige_res.bind("<Return>", self.berechne_und_plotte)
+            anzeige_res.bind("<FocusOut>", self.berechne_und_plotte)
+
+            self.felder_dic.update({labels[col - 1]: anzeige_res})
+        print(self.felder_dic)
 
         # ---------- Plot-Bereich ----------
-        # Kraft auf die Kugel Diagramm
+
+        # ---------- Kraft auf die Kugel Diagramm --------
         label_plot1 = ttk.Label(self, text="Kraft auf die Kugel")
         label_plot1.grid(row=3, column=9)
 
@@ -1149,7 +1171,7 @@ class Page13(tk.Frame):
         self.toolbar_1 = NavigationToolbar2Tk(self.canvas_1, self.plot_frame_1)
         self.toolbar_1.update()
 
-        # Flugbahn Diagramm
+        # --------- Flugbahn Diagramm -----------
         label_plot2 = ttk.Label(self, text="Flugbahn der Kugel")
         label_plot2.grid(row=10, column=9)
 
@@ -1165,56 +1187,35 @@ class Page13(tk.Frame):
         self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
         self.toolbar_2.update()
 
-        # entry-felder
-        labels = ["r_kugel", "u_permea_relativ", "N_windungen", "I", "r_spule", "l"]
-        felder_dic = {}
+    def berechne_und_plotte(self, event=None):
+        werte = {}
 
-        for col in range(1, 6):
-            bezeichnung = tk.Label(self, text=labels[col - 1])
-            bezeichnung.grid(row=4, column=col, padx=5, pady=5, sticky="w")
-            anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
-            anzeige_res.grid(row=5, column=col, padx=5, sticky="w")
-            felder_dic.update({labels[col - 1]: anzeige_res})
-            print(felder_dic)
+        for key, widget in self.felder_dic.items():
+            text = widget.get("1.0", "end-1c").strip()
+            werte[key] = float(text) if text else None
 
-        label = ttk.Label(self, text="Fehlermeldung-Box")
-        label.grid(row=2, column=2, padx=10, pady=10, sticky="w")
+        self.funktion = spulen_beschleunigung(werte, self.anzeige_fehler, self.felder_dic)
 
-        anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
-        anzeige_fehler.grid(row=2, column=3)
-
-        def solve_and_show():
-            werte = {}
-            for key, widget in felder_dic.items():
-                eintrag_feld = widget.get("1.0", "end-1c")
-                if eintrag_feld != '':
-                    eintrag_feld = float(eintrag_feld)
-                if eintrag_feld == '':
-                    eintrag_feld = None
-                werte[key] = eintrag_feld
-            flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic)
+        if self.funktion is not None:
+            self.update_plot()
 
         # ---------- Automatisches Update ----------
-    def update_plot(self, *args):
-        expr_str = self.funktion_var.get()
-        if not expr_str:
+
+    def update_plot(self):
+        if self.funktion is None:
             return
 
-        try:
-            expr = sympify(expr_str)
-        except:
-            return  # ungültiger Ausdruck → nichts plotten
-
-        self.plot(self.ax_1, self.canvas_1, expr)
-        self.plot(self.ax_2, self.canvas_2, expr)
+        self.plot(self.ax_1, self.canvas_1, self.funktion)
+        """self.plot(self.ax_2, self.canvas_2, self.funktion)"""
 
         # ---------- Plot-Funktion ----------
 
     def plot(self, ax, canvas, funktion_expr):
         ax.clear()
-
-        x = Symbol('x')
-        f = lambdify(x, funktion_expr, 'numpy')
+        funktion_expr_sympy = sympy.sympify(funktion_expr)
+        print(funktion_expr_sympy)
+        z = Symbol("z")
+        f = lambdify(z, funktion_expr_sympy, 'numpy')
 
         x_vals = np.linspace(-30, 30, 400)
 
@@ -1225,7 +1226,7 @@ class Page13(tk.Frame):
 
         ax.plot(x_vals, y_vals)
         ax.grid(True)
-        ax.set_title(f"Plot von {funktion_expr}")
+        ax.set_title(f"Plot von {funktion_expr_sympy}")
 
         canvas.draw()
 
