@@ -367,7 +367,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
 def spulen_beschleunigung():
-    r_Kugel = int(input("Radius Kugel:"))
+    r_kugel = int(input("Radius Kugel:"))
     u_permea_vakuum = 1.256637061 * (10**-6)
     u_permea_relativ = int(input("relative Permeabilitätszahl:"))
 
@@ -380,7 +380,7 @@ def spulen_beschleunigung():
     l = int(input("Länge der Spule:"))
 
     z = sympy.symbols("z")
-    f_z = ((-1) * np.pi * (r_Kugel**3) * u_permea_vakuum * (u_permea_relativ - 1) *
+    f_z = ((-1) * np.pi * (r_kugel**3) * u_permea_vakuum * (u_permea_relativ - 1) *
            (N_windungen**2) * (I**2) * (r_spule ** 4) * (z / ((z**2) + (r_spule**2))**4))
 
 def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
@@ -1122,11 +1122,11 @@ class Page13(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn",font=("Arial",15))
+        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn")
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
-        button1.grid(row=1, column=1, padx=10, pady=10)
+        button1.grid(row=2, column=1, padx=10, pady=10)
 
         self.funktion_var = tk.StringVar()
         self.funktion_var.trace_add("write", self.update_plot)
@@ -1135,10 +1135,10 @@ class Page13(tk.Frame):
         # ---------- Plot-Bereich ----------
         # Kraft auf die Kugel Diagramm
         label_plot1 = ttk.Label(self, text="Kraft auf die Kugel")
-        label_plot1.grid(row=1, column=5)
+        label_plot1.grid(row=3, column=9)
 
         self.plot_frame_1 = tk.Frame(self)
-        self.plot_frame_1.grid(row=2, column=5, rowspan=5,columnspan=5)
+        self.plot_frame_1.grid(row=4, column=9, rowspan=5,columnspan=5)
 
         self.fig_1 = Figure(figsize=(5, 2), dpi=100)
         self.ax_1 = self.fig_1.add_subplot(111)
@@ -1149,12 +1149,12 @@ class Page13(tk.Frame):
         self.toolbar_1 = NavigationToolbar2Tk(self.canvas_1, self.plot_frame_1)
         self.toolbar_1.update()
 
+        # Flugbahn Diagramm
         label_plot2 = ttk.Label(self, text="Flugbahn der Kugel")
-        label_plot2.grid(row=7, column=5)
+        label_plot2.grid(row=10, column=9)
 
         self.plot_frame_2 = tk.Frame(self)
-        self.plot_frame_2.grid(row=8, column=5, rowspan=5, columnspan=5)
-
+        self.plot_frame_2.grid(row=11, column=9, rowspan=5, columnspan=5)
 
         self.fig_2 = Figure(figsize=(5, 2), dpi=100)
         self.ax_2 = self.fig_2.add_subplot(111)
@@ -1165,8 +1165,36 @@ class Page13(tk.Frame):
         self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
         self.toolbar_2.update()
 
-        # ---------- Automatisches Update ----------
+        # entry-felder
+        labels = ["r_kugel", "u_permea_relativ", "N_windungen", "I", "r_spule", "l"]
+        felder_dic = {}
 
+        for col in range(1, 6):
+            bezeichnung = tk.Label(self, text=labels[col - 1])
+            bezeichnung.grid(row=4, column=col, padx=5, pady=5, sticky="w")
+            anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
+            anzeige_res.grid(row=5, column=col, padx=5, sticky="w")
+            felder_dic.update({labels[col - 1]: anzeige_res})
+            print(felder_dic)
+
+        label = ttk.Label(self, text="Fehlermeldung-Box")
+        label.grid(row=2, column=2, padx=10, pady=10, sticky="w")
+
+        anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
+        anzeige_fehler.grid(row=2, column=3)
+
+        def solve_and_show():
+            werte = {}
+            for key, widget in felder_dic.items():
+                eintrag_feld = widget.get("1.0", "end-1c")
+                if eintrag_feld != '':
+                    eintrag_feld = float(eintrag_feld)
+                if eintrag_feld == '':
+                    eintrag_feld = None
+                werte[key] = eintrag_feld
+            flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic)
+
+        # ---------- Automatisches Update ----------
     def update_plot(self, *args):
         expr_str = self.funktion_var.get()
         if not expr_str:
@@ -1200,6 +1228,8 @@ class Page13(tk.Frame):
         ax.set_title(f"Plot von {funktion_expr}")
 
         canvas.draw()
+
+
 # Driver Code
 app = tkinterApp()
 app.mainloop()
