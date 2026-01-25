@@ -378,11 +378,19 @@ def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
     r_spule = (werte["r_spule"], "r_spule")
     l = (werte["Länge"], "Länge")
 
-    z = symbols("z")
+    x = symbols("x")
 
     f_l = ((-1) * np.pi * (r_kugel[0]**3) * u_permea_vakuum * (u_relativ[0] - 1) *
-           (N_windungen[0]**2) * (I[0]**2) * (r_spule[0] ** 4) * (z / ((z**2) + (r_spule[0]**2))**4))
+           (N_windungen[0]**2) * (I[0]**2) * (r_spule[0] ** 4) * (x / ((x**2) + (r_spule[0]**2))**4))
 
+    f_l_abl = ableitung(f_l, 2, "a")
+    schritt = 0.1
+    beschleunigung_liste = []
+
+    for x_werte in np.arange((-l[0] / 2), 0, schritt):
+        beschleunigung = f_l_abl.subs(x, x_werte)
+        beschleunigung_liste.append(beschleunigung)
+    print(beschleunigung_liste)
     return f_l
 
 def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
@@ -473,7 +481,7 @@ def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
 
-def flugbahn_mit_widerstand():
+def flugbahn_mit_widerstand(werte):
     g = 9.80665
 
     luftdichte = (werte["rho"], "rho")
@@ -1214,8 +1222,8 @@ class Page13(tk.Frame):
         ax.clear()
         funktion_expr_sympy = sympy.sympify(funktion_expr)
         print(funktion_expr_sympy)
-        z = Symbol("z")
-        f = lambdify(z, funktion_expr_sympy, 'numpy')
+        x = Symbol("x")
+        f = lambdify(x, funktion_expr_sympy, 'numpy')
 
         x_vals = np.linspace(-30, 30, 400)
 
