@@ -378,19 +378,25 @@ def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
     r_spule = (werte["r_spule"], "r_spule")
     l = (werte["Länge"], "Länge")
 
+    m = (werte["Masse"], "Masse")
     x = symbols("x")
 
     f_l = ((-1) * np.pi * (r_kugel[0]**3) * u_permea_vakuum * (u_relativ[0] - 1) *
            (N_windungen[0]**2) * (I[0]**2) * (r_spule[0] ** 4) * (x / ((x**2) + (r_spule[0]**2))**4))
 
-    f_l_abl = ableitung(f_l, 2, "a")
     schritt = 0.1
     beschleunigung_liste = []
 
-    for x_werte in np.arange((-l[0] / 2), 0, schritt):
-        beschleunigung = f_l_abl.subs(x, x_werte)
-        beschleunigung_liste.append(beschleunigung)
-    print(beschleunigung_liste)
+    if m[0] is not None:
+        for x_werte in np.arange((-l[0] / 2), 0, schritt):
+            kraft_an_x = f_l.subs(x, x_werte)
+            beschleunigung = kraft_an_x / m[0]
+            beschleunigung_liste.append(beschleunigung)
+
+        """hoechst_a = int(max(beschleunigung_liste))
+        print(hoechst_a)
+
+        v0_sp = np.sqrt(hoechst_a * l[0])"""
     return f_l
 
 def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
@@ -480,6 +486,10 @@ def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
 
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
+
+    x = sympy.Symbol("x")
+    flugbahn_o_widerstand = ((-1) * g / (2*(v0[0]**2)*(np.cos(a[0])**2)) * x**2) + (np.tan(a[0])*x) + h[0]
+    return flugbahn_o_widerstand
 
 def flugbahn_mit_widerstand(werte):
     g = 9.80665
@@ -1041,49 +1051,145 @@ class Page11(tk.Frame):
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(StartPage))
         button1.grid(row=1, column=1, padx=10, pady=10)
 
-        labels = ["h", "v0", "a", "t", "R", "h_max"]
-        felder_dic = {}
+        labels_fb = ["h", "v0", "a", "t", "R", "h_max"]
+        self.felder_dic_fb = {}
 
-        for col in range(1, 7):
-            bezeichnung = tk.Label(self, text=labels[col - 1])
-            bezeichnung.grid(row=3, column=1 + col, padx=10, pady=10, sticky="w")
-            anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
-            anzeige_res.grid(row=4, column=1 + col, padx=10, sticky="w")
-            felder_dic.update({labels[col - 1]: anzeige_res})
+        for col_fb in range(1, 7):
+            bezeichnung_fb = tk.Label(self, text=labels_fb[col_fb - 1])
+            bezeichnung_fb.grid(row=3, column=1 + col_fb, padx=10, pady=10, sticky="w")
+            anzeige_res_fb = tk.Text(self, height=1, width=10, bg="light cyan")
+            anzeige_res_fb.grid(row=4, column=1 + col_fb, padx=10, sticky="w")
 
-        anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
-        anzeige_fehler.grid(row=1, column=4)
+            anzeige_res_fb.bind("<Return>", self.berechne_und_plotte_fb)
+            anzeige_res_fb.bind("<FocusOut>", self.berechne_und_plotte_fb)
 
-        label = ttk.Label(self, text="Fehlermeldung-Box")
-        label.grid(row=1, column=3, padx=10, pady=10)
+            self.felder_dic_fb.update({labels_fb[col_fb - 1]: anzeige_res_fb})
 
-        def solve_and_show():
-            werte = {}
-            for key, widget in felder_dic.items():
-                eintrag_feld = widget.get("1.0", "end-1c")
-                if eintrag_feld != '':
-                    eintrag_feld = float(eintrag_feld)
-                if eintrag_feld == '':
-                    eintrag_feld = None
-                werte[key] = eintrag_feld
-            flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic)
+
+        fehler_box_label = ttk.Label(self, text="Fehlermeldung-Box")
+        fehler_box_label.grid(row=1, column=3, padx=10, pady=10)
+        self.anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
+        self.anzeige_fehler.grid(row=1, column=4)
+
 
         preset_button = ttk.Button(self, text="presets", command=lambda: controller.show_frame(Page12))
-        preset_button.grid(row=5, column=1, padx=10, pady=10)
+        preset_button.grid(row=2, column=1, padx=10, pady=10)
 
-        spulen_flugbahn = Button(self, height=2, width=20, text="Flugbahn aus Spulen", command=lambda: controller.show_frame(Page13))
-        spulen_flugbahn.grid(row=6, column=1, padx=10, pady=10)
-
-        solv_button = ttk.Button(self, text="solv", command=solve_and_show)
-        solv_button.grid(row=1, column=5, padx=10, pady=10)
 
         def clear():
             for name in labels:
-                felder_dic[name].delete("1.0", END)
-            anzeige_fehler.delete("1.0", END)
+                self.felder_dic_fb[name].delete("1.0", END)
+            self.anzeige_fehler.delete("1.0", END)
 
         clear_button = ttk.Button(self, text="clear", command=clear)
         clear_button.grid(row=1, column=6, padx=10, pady=10)
+
+        self.felder_dic_sp = {}
+
+        # entry-felder
+        labels = ["r_kugel", "u_relativ", "N_windungen", "I", "r_spule", "Länge", "Masse"]
+
+
+        for col_sp in range(1, 8):
+            bezeichnung_sp = tk.Label(self, text=labels[col_sp - 1])
+            bezeichnung_sp.grid(row=5 if col_sp < 7 else 7, column=(1 + col_sp) if col_sp < 7 else 2,
+                                padx=10, pady=10, sticky="w")
+            anzeige_res_sp = tk.Text(self, height=1, width=10, bg="light cyan")
+            anzeige_res_sp.grid(row=6 if col_sp < 7 else 8, column=(1 + col_sp) if col_sp < 7 else 2,
+                                padx=10, sticky="w")
+
+            anzeige_res_sp.bind("<Return>", self.berechne_und_plotte_sp)
+            anzeige_res_sp.bind("<FocusOut>", self.berechne_und_plotte_sp)
+
+            self.felder_dic_sp.update({labels[col_sp - 1]: anzeige_res_sp})
+
+
+        # ---------- Plot-Bereich ----------
+
+        # --------- Flugbahn Diagramm -----------
+        label_plot1 = ttk.Label(self, text="Flugbahn der Kugel")
+        label_plot1.grid(row=3, column=9)
+
+        self.plot_frame_1 = tk.Frame(self)
+        self.plot_frame_1.grid(row=4, column=9, rowspan=5, columnspan=5)
+
+        self.fig_1 = Figure(figsize=(5, 2), dpi=100)
+        self.ax_1 = self.fig_1.add_subplot(111)
+
+        self.canvas_1 = FigureCanvasTkAgg(self.fig_1, master=self.plot_frame_1)
+        self.canvas_1.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        self.toolbar_1 = NavigationToolbar2Tk(self.canvas_1, self.plot_frame_1)
+        self.toolbar_1.update()
+
+        # ---------- Kraft auf die Kugel Diagramm --------
+        label_plot2 = ttk.Label(self, text="Kraft auf die Kugel")
+        label_plot2.grid(row=10, column=9)
+
+        self.plot_frame_2 = tk.Frame(self)
+        self.plot_frame_2.grid(row=11, column=9, rowspan=5, columnspan=5)
+
+        self.fig_2 = Figure(figsize=(5, 2), dpi=100)
+        self.ax_2 = self.fig_2.add_subplot(111)
+
+        self.canvas_2 = FigureCanvasTkAgg(self.fig_2, master=self.plot_frame_2)
+        self.canvas_2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
+        self.toolbar_2.update()
+
+    def berechne_und_plotte_fb(self, event=None):
+        werte_fb = {}
+
+        for key, widget in self.felder_dic_fb.items():
+            text = widget.get("1.0", "end-1c").strip()
+            werte_fb[key] = float(text) if text else None
+
+        self.funk_fb_o_widerstand = flugbahn_ohne_widerstand(werte_fb, self.anzeige_fehler, self.felder_dic_fb)
+
+        if self.funk_fb_o_widerstand is not None:
+            self.update_plot_fb()
+
+    def berechne_und_plotte_sp(self, event=None):
+        werte_sp = {}
+
+        for key, widget in self.felder_dic_sp.items():
+            text = widget.get("1.0", "end-1c").strip()
+            werte_sp[key] = float(text) if text else None
+
+        self.funk_sp = spulen_beschleunigung(werte_sp, self.anzeige_fehler, self.felder_dic_sp)
+
+        if self.funk_sp is not None:
+            self.update_plot_sp()
+        # ---------- Automatisches Update ----------
+
+    def update_plot_fb(self):
+        self.plot(self.ax_1, self.canvas_1, self.funk_fb_o_widerstand)
+
+
+    def update_plot_sp(self):
+        self.plot(self.ax_2, self.canvas_2, self.funk_sp)
+        # ---------- Plot-Funktion ----------
+
+    def plot(self, ax, canvas, funktion_expr):
+        ax.clear()
+        funktion_expr_sympy = sympy.sympify(funktion_expr)
+        print(funktion_expr_sympy)
+        x = Symbol("x")
+        f = lambdify(x, funktion_expr_sympy, 'numpy')
+
+        x_vals = np.linspace(-30, 100000, 400)
+
+        try:
+            y_vals = f(x_vals)
+        except:
+            y_vals = np.full_like(x_vals, np.nan)
+
+        ax.plot(x_vals, y_vals)
+        ax.grid(True)
+        ax.set_title(f"Plot von {funktion_expr_sympy}")
+
+        canvas.draw()
 
 
 class Page12(tk.Frame):
@@ -1144,99 +1250,7 @@ class Page13(tk.Frame):
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
         button1.grid(row=2, column=1, padx=10, pady=10)
 
-        self.felder_dic = {}
 
-        # entry-felder
-        labels = ["r_kugel", "u_relativ", "N_windungen", "I", "r_spule", "Länge"]
-
-        for col in range(1, 7):
-            bezeichnung = tk.Label(self, text=labels[col - 1])
-            bezeichnung.grid(row=4, column=col, padx=5, pady=5, sticky="w")
-            anzeige_res = tk.Text(self, height=1, width=10, bg="light cyan")
-            anzeige_res.grid(row=5, column=col, padx=5, sticky="w")
-
-            anzeige_res.bind("<Return>", self.berechne_und_plotte)
-            anzeige_res.bind("<FocusOut>", self.berechne_und_plotte)
-
-            self.felder_dic.update({labels[col - 1]: anzeige_res})
-        print(self.felder_dic)
-
-        # ---------- Plot-Bereich ----------
-
-        # ---------- Kraft auf die Kugel Diagramm --------
-        label_plot1 = ttk.Label(self, text="Kraft auf die Kugel")
-        label_plot1.grid(row=3, column=9)
-
-        self.plot_frame_1 = tk.Frame(self)
-        self.plot_frame_1.grid(row=4, column=9, rowspan=5,columnspan=5)
-
-        self.fig_1 = Figure(figsize=(5, 2), dpi=100)
-        self.ax_1 = self.fig_1.add_subplot(111)
-
-        self.canvas_1 = FigureCanvasTkAgg(self.fig_1, master=self.plot_frame_1)
-        self.canvas_1.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-        self.toolbar_1 = NavigationToolbar2Tk(self.canvas_1, self.plot_frame_1)
-        self.toolbar_1.update()
-
-        # --------- Flugbahn Diagramm -----------
-        label_plot2 = ttk.Label(self, text="Flugbahn der Kugel")
-        label_plot2.grid(row=10, column=9)
-
-        self.plot_frame_2 = tk.Frame(self)
-        self.plot_frame_2.grid(row=11, column=9, rowspan=5, columnspan=5)
-
-        self.fig_2 = Figure(figsize=(5, 2), dpi=100)
-        self.ax_2 = self.fig_2.add_subplot(111)
-
-        self.canvas_2 = FigureCanvasTkAgg(self.fig_2, master=self.plot_frame_2)
-        self.canvas_2.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-        self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
-        self.toolbar_2.update()
-
-    def berechne_und_plotte(self, event=None):
-        werte = {}
-
-        for key, widget in self.felder_dic.items():
-            text = widget.get("1.0", "end-1c").strip()
-            werte[key] = float(text) if text else None
-
-        self.funktion = spulen_beschleunigung(werte, self.anzeige_fehler, self.felder_dic)
-
-        if self.funktion is not None:
-            self.update_plot()
-
-        # ---------- Automatisches Update ----------
-
-    def update_plot(self):
-        if self.funktion is None:
-            return
-
-        self.plot(self.ax_1, self.canvas_1, self.funktion)
-        """self.plot(self.ax_2, self.canvas_2, self.funktion)"""
-
-        # ---------- Plot-Funktion ----------
-
-    def plot(self, ax, canvas, funktion_expr):
-        ax.clear()
-        funktion_expr_sympy = sympy.sympify(funktion_expr)
-        print(funktion_expr_sympy)
-        x = Symbol("x")
-        f = lambdify(x, funktion_expr_sympy, 'numpy')
-
-        x_vals = np.linspace(-30, 30, 400)
-
-        try:
-            y_vals = f(x_vals)
-        except:
-            y_vals = np.full_like(x_vals, np.nan)
-
-        ax.plot(x_vals, y_vals)
-        ax.grid(True)
-        ax.set_title(f"Plot von {funktion_expr_sympy}")
-
-        canvas.draw()
 
 
 # Driver Code
