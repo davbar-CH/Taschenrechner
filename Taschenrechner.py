@@ -487,9 +487,10 @@ def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
 
-    x = sympy.Symbol("x")
+    x = Symbol("x")
     flugbahn_o_widerstand = ((-1) * g / (2*(v0[0]**2)*(np.cos(a[0])**2)) * x**2) + (np.tan(a[0])*x) + h[0]
-    return flugbahn_o_widerstand
+    reichweite = werte["R"]
+    return flugbahn_o_widerstand, reichweite
 
 def flugbahn_mit_widerstand(werte):
     g = 9.80665
@@ -1052,6 +1053,7 @@ class Page11(tk.Frame):
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         labels_fb = ["h", "v0", "a", "t", "R", "h_max"]
+        labels_sp = ["r_kugel", "u_relativ", "N_windungen", "I", "r_spule", "Länge", "Masse"]
         self.felder_dic_fb = {}
 
         for col_fb in range(1, 7):
@@ -1077,7 +1079,7 @@ class Page11(tk.Frame):
 
 
         def clear():
-            for name in labels:
+            for name_fb in zip(labels_fb, labels_sp):
                 self.felder_dic_fb[name].delete("1.0", END)
             self.anzeige_fehler.delete("1.0", END)
 
@@ -1086,9 +1088,8 @@ class Page11(tk.Frame):
 
         self.felder_dic_sp = {}
 
-        # entry-felder
-        labels = ["r_kugel", "u_relativ", "N_windungen", "I", "r_spule", "Länge", "Masse"]
 
+        # entry-felder
 
         for col_sp in range(1, 8):
             bezeichnung_sp = tk.Label(self, text=labels[col_sp - 1])
@@ -1145,10 +1146,10 @@ class Page11(tk.Frame):
             text = widget.get("1.0", "end-1c").strip()
             werte_fb[key] = float(text) if text else None
 
-        self.funk_fb_o_widerstand = flugbahn_ohne_widerstand(werte_fb, self.anzeige_fehler, self.felder_dic_fb)
+        self.funk_fb_o_widerstand, reichweite = flugbahn_ohne_widerstand(werte_fb, self.anzeige_fehler, self.felder_dic_fb)
 
         if self.funk_fb_o_widerstand is not None:
-            self.update_plot_fb()
+            self.update_plot_fb(reichweite)
 
     def berechne_und_plotte_sp(self, event=None):
         werte_sp = {}
@@ -1161,24 +1162,24 @@ class Page11(tk.Frame):
 
         if self.funk_sp is not None:
             self.update_plot_sp()
-        # ---------- Automatisches Update ----------
 
-    def update_plot_fb(self):
-        self.plot(self.ax_1, self.canvas_1, self.funk_fb_o_widerstand)
+        # ---------- Automatisches Update ----------
+    def update_plot_fb(self, ende):
+        self.plot(self.ax_1, self.canvas_1, self.funk_fb_o_widerstand, 0, ende)
 
 
     def update_plot_sp(self):
-        self.plot(self.ax_2, self.canvas_2, self.funk_sp)
+        self.plot(self.ax_2, self.canvas_2, self.funk_sp, -30, 30)
         # ---------- Plot-Funktion ----------
 
-    def plot(self, ax, canvas, funktion_expr):
+    def plot(self, ax, canvas, funktion_expr, anfang, ende):
         ax.clear()
         funktion_expr_sympy = sympy.sympify(funktion_expr)
         print(funktion_expr_sympy)
         x = Symbol("x")
         f = lambdify(x, funktion_expr_sympy, 'numpy')
 
-        x_vals = np.linspace(-30, 100000, 400)
+        x_vals = np.linspace(anfang, ende, 400)
 
         try:
             y_vals = f(x_vals)
