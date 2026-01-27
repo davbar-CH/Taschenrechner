@@ -185,6 +185,7 @@ def integrale(funktion, anzeige, a, b):
 # speicher, falls man einen Vektor behalten möchte
 speicher_dic = {}
 
+
 def vektorgeometrie(values, float_values, anzeige, befehl):
     anzeige.delete(1.0, END)
 
@@ -365,13 +366,14 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
             for wert, name in zip(werte, namen):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
+
 def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
     r_kugel = (werte["r_kugel"], "r_kugel")
-    u_permea_vakuum = 1.256637061 * (10**-6)
+    u_permea_vakuum = 1.256637061 * (10 ** -6)
     u_relativ = (werte["u_relativ"], "u_relativ")
 
     if u_relativ is None or u_relativ == 0:
-        u_relativ = (5150,"u_relativ")
+        u_relativ = (5150, "u_relativ")
 
     N_windungen = (werte["N_windungen"], "N_windungen")
     I = (werte["I"], "I")
@@ -381,26 +383,24 @@ def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
     m = (werte["Masse"], "Masse")
     x = symbols("x")
 
-    f_l = ((-1) * np.pi * (r_kugel[0]**3) * u_permea_vakuum * (u_relativ[0] - 1) *
-           (N_windungen[0]**2) * (I[0]**2) * (r_spule[0] ** 4) * (x / ((x**2) + (r_spule[0]**2))**4))
+    f_l = ((-1) * np.pi * (r_kugel[0] ** 3) * u_permea_vakuum * (u_relativ[0] - 1) *
+           (N_windungen[0] ** 2) * (I[0] ** 2) * (r_spule[0] ** 4) * (x / ((x ** 2) + (r_spule[0] ** 2)) ** 4))
 
     schritt = 0.1
     beschleunigung_liste = []
-
+    zeit = 0
     if m[0] is not None:
         for x_werte in np.arange((-l[0] / 2), 0, schritt):
             kraft_an_x = f_l.subs(x, x_werte)
             beschleunigung = kraft_an_x / m[0]
-            beschleunigung_liste.append(beschleunigung)
+            zeit = zeit + schritt
+            geschwindigkeit = beschleunigung * zeit
 
-        """hoechst_a = int(max(beschleunigung_liste))
-        print(hoechst_a)
-
-        v0_sp = np.sqrt(hoechst_a * l[0])"""
+            
     return f_l
 
-def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
 
+def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
     # labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
     g = 9.80665
 
@@ -450,7 +450,7 @@ def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
 
     fehlende_pflicht = pflicht_param_list.count(None)
     fehlende_optional = optional_param_list.count(None)
-    try: # was, wenn ich keine parameter habe?
+    try:  # was, wenn ich keine parameter habe?
         if (fehlende_pflicht >= 1 and fehlende_optional == 3) or (fehlende_pflicht == 2):
             anzeige_fehler.insert(END, "Es fehlt ein Parameter: v0, a oder h")
 
@@ -488,15 +488,16 @@ def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
         print(f"Du hast Mist gebaut, David:{e}")
 
     x = Symbol("x")
-    flugbahn_o_widerstand = ((-1) * g / (2*(v0[0]**2)*(np.cos(a[0])**2)) * x**2) + (np.tan(a[0])*x) + h[0]
+    flugbahn_o_widerstand = ((-1) * g / (2 * (v0[0] ** 2) * (np.cos(a[0]) ** 2)) * x ** 2) + (np.tan(a[0]) * x) + h[0]
     reichweite = werte["R"]
     return flugbahn_o_widerstand, reichweite
+
 
 def flugbahn_mit_widerstand(werte):
     g = 9.80665
 
     luftdichte = (werte["rho"], "rho")
-    cw_wert =  (werte["cw"], "cw")
+    cw_wert = (werte["cw"], "cw")
     querschnitt = (werte["A"], "A")
     masse = (werte["m"], "m")
 
@@ -504,13 +505,15 @@ def flugbahn_mit_widerstand(werte):
     v0 = (werte["v0"], "v0")
     a = (werte["a"], "a")
 
-    k = (cw_wert[0] * querschnitt[0]  * luftdichte[0]) / (2 * masse[0])
+    k = (cw_wert[0] * querschnitt[0] * luftdichte[0]) / (2 * masse[0])
     v_grenz = np.sqrt(g / k)
 
-    h_max = ((v_grenz**2) / (2*g)) * np.log(1+((v0[0]**2) / (v_grenz**2)))
+    h_max = ((v_grenz ** 2) / (2 * g)) * np.log(1 + ((v0[0] ** 2) / (v_grenz ** 2)))
 
-    steigzeit = (v_grenz/g) * np.arctan(v0[0]/v_grenz)
-    fallzeit = (v_grenz/g) * np.arccosh(np.exp((h_max * g) / (v_grenz**2)))
+    steigzeit = (v_grenz / g) * np.arctan(v0[0] / v_grenz)
+    fallzeit = (v_grenz / g) * np.arccosh(np.exp((h_max * g) / (v_grenz ** 2)))
+
+
 # to do vektor save
 class tkinterApp(tk.Tk):
 
@@ -531,7 +534,8 @@ class tkinterApp(tk.Tk):
 
         # iterating through a tuple consisting
         # of the different page layouts
-        for F in (StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12, Page13):
+        for F in (
+        StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12, Page13):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -626,7 +630,7 @@ class Page3(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Cheat Sheet", font=("Arial",15))
+        label = ttk.Label(self, text="Cheat Sheet", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page4))
@@ -663,7 +667,7 @@ class Page4(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = ttk.Label(self, text="Vektoren", font=("Arial",15))
+        label = ttk.Label(self, text="Vektoren", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
@@ -682,7 +686,8 @@ class Page4(tk.Frame):
         # vier Punkte Überschrift
         for col in range(4):
             ttk.Label(self,
-                      text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", "vierter Punkt, D"][col]}").grid(
+                      text=f"{["erster Punkt, A", "zweiter Punkt, B", "dritter Punkt, C", 
+                               "vierter Punkt, D"][col]}").grid(
                 row=2, column=2 + col, padx=10, pady=10)
             for row in range(3):
                 if labels[col]:  # Falls Text vorhanden, dann labels setzen
@@ -732,7 +737,7 @@ class Page4(tk.Frame):
 class Page5(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="2x2", font=("Arial",15))
+        label = ttk.Label(self, text="2x2", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
@@ -778,7 +783,7 @@ class Page5(tk.Frame):
 class Page6(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="3x3", font=("Arial",15))
+        label = ttk.Label(self, text="3x3", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
@@ -825,7 +830,7 @@ class Page6(tk.Frame):
 class Page7(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="4x4", font=("Arial",15))
+        label = ttk.Label(self, text="4x4", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page1))
@@ -874,7 +879,7 @@ class Page8(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Kürven diskutieren", font=("Arial",15))
+        label = ttk.Label(self, text="Kürven diskutieren", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page2))
@@ -926,7 +931,7 @@ class Page9(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = ttk.Label(self, text="Graph", font=("Arial",15))
+        label = ttk.Label(self, text="Graph", font=("Arial", 15))
         label.pack()
 
         button1 = ttk.Button(self, text="Startpage", command=lambda: controller.show_frame(StartPage))
@@ -985,7 +990,7 @@ class Page10(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Integrale", font=("Arial",15))
+        label = ttk.Label(self, text="Integrale", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page2))
@@ -1046,7 +1051,7 @@ class Page11(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller  # Speichern des Controllers als Instanzvariable
-        label = ttk.Label(self, text="Flugbahn", font=("Arial",15))
+        label = ttk.Label(self, text="Flugbahn", font=("Arial", 15))
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(StartPage))
@@ -1067,20 +1072,19 @@ class Page11(tk.Frame):
 
             self.felder_dic_fb.update({labels_fb[col_fb - 1]: anzeige_res_fb})
 
-
         fehler_box_label = ttk.Label(self, text="Fehlermeldung-Box")
         fehler_box_label.grid(row=1, column=3, padx=10, pady=10)
         self.anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
         self.anzeige_fehler.grid(row=1, column=4)
 
-
         preset_button = ttk.Button(self, text="presets", command=lambda: controller.show_frame(Page12))
         preset_button.grid(row=2, column=1, padx=10, pady=10)
 
-
         def clear():
-            for name_fb in zip(labels_fb, labels_sp):
-                self.felder_dic_fb[name].delete("1.0", END)
+            for name_fb, name_sp in zip(labels_fb, labels_sp):
+                self.felder_dic_fb[name_fb].delete("1.0", END)
+                self.felder_dic_sp[name_sp].delete("1.0", END)
+
             self.anzeige_fehler.delete("1.0", END)
 
         clear_button = ttk.Button(self, text="clear", command=clear)
@@ -1088,11 +1092,10 @@ class Page11(tk.Frame):
 
         self.felder_dic_sp = {}
 
-
         # entry-felder
 
         for col_sp in range(1, 8):
-            bezeichnung_sp = tk.Label(self, text=labels[col_sp - 1])
+            bezeichnung_sp = tk.Label(self, text=labels_sp[col_sp - 1])
             bezeichnung_sp.grid(row=5 if col_sp < 7 else 7, column=(1 + col_sp) if col_sp < 7 else 2,
                                 padx=10, pady=10, sticky="w")
             anzeige_res_sp = tk.Text(self, height=1, width=10, bg="light cyan")
@@ -1102,8 +1105,7 @@ class Page11(tk.Frame):
             anzeige_res_sp.bind("<Return>", self.berechne_und_plotte_sp)
             anzeige_res_sp.bind("<FocusOut>", self.berechne_und_plotte_sp)
 
-            self.felder_dic_sp.update({labels[col_sp - 1]: anzeige_res_sp})
-
+            self.felder_dic_sp.update({labels_sp[col_sp - 1]: anzeige_res_sp})
 
         # ---------- Plot-Bereich ----------
 
@@ -1146,7 +1148,8 @@ class Page11(tk.Frame):
             text = widget.get("1.0", "end-1c").strip()
             werte_fb[key] = float(text) if text else None
 
-        self.funk_fb_o_widerstand, reichweite = flugbahn_ohne_widerstand(werte_fb, self.anzeige_fehler, self.felder_dic_fb)
+        self.funk_fb_o_widerstand, reichweite = flugbahn_ohne_widerstand(werte_fb, self.anzeige_fehler,
+                                                                         self.felder_dic_fb)
 
         if self.funk_fb_o_widerstand is not None:
             self.update_plot_fb(reichweite)
@@ -1164,9 +1167,9 @@ class Page11(tk.Frame):
             self.update_plot_sp()
 
         # ---------- Automatisches Update ----------
+
     def update_plot_fb(self, ende):
         self.plot(self.ax_1, self.canvas_1, self.funk_fb_o_widerstand, 0, ende)
-
 
     def update_plot_sp(self):
         self.plot(self.ax_2, self.canvas_2, self.funk_sp, -30, 30)
@@ -1216,18 +1219,17 @@ class Page12(tk.Frame):
 
         # insert elements by their
         # index and names.
-        listbox.insert(1, "Speer") # 0.8kg, Durchmesser 0.03m, cw = 0.5
-        listbox.insert(2, "Football") # 0.4252kg, Durchmesser 0.54m, cw = 0.25
-        listbox.insert(3, "Die Leiden des jungen Werthers (offen)") #0.204kg, 0.248m (offen), cw = 1.17
-        listbox.insert(4, "T-34/85 Schuss")# 9.21 kg, Durchmesser 0.85 m, v0 = 792 m/s, cw = 0.3
-        listbox.insert(6, "Medizinball")# 5kg, Durchmesser 0.3m, cw = 0.47
-        listbox.insert(8, "Stuhl, Mensa")# 4.9 kg, 0.210375m^2, cw = 1.5
-        listbox.insert(9, "Lehrer") # 80kg, 0.95m^2, cw = 1.15
+        listbox.insert(1, "Speer")  # 0.8kg, Durchmesser 0.03m, cw = 0.5
+        listbox.insert(2, "Football")  # 0.4252kg, Durchmesser 0.54m, cw = 0.25
+        listbox.insert(3, "Die Leiden des jungen Werthers (offen)")  # 0.204kg, 0.248m (offen), cw = 1.17
+        listbox.insert(4, "T-34/85 Schuss")  # 9.21 kg, Durchmesser 0.85 m, v0 = 792 m/s, cw = 0.3
+        listbox.insert(6, "Medizinball")  # 5kg, Durchmesser 0.3m, cw = 0.47
+        listbox.insert(8, "Stuhl, Mensa")  # 4.9 kg, 0.210375m^2, cw = 1.5
+        listbox.insert(9, "Lehrer")  # 80kg, 0.95m^2, cw = 1.15
 
         listbox.grid(row=5, column=4, padx=10, pady=10)
 
         def selected_item():
-
             for i in listbox.curselection():
                 print(listbox.get(i))
 
@@ -1235,12 +1237,13 @@ class Page12(tk.Frame):
         select_knopf.grid(row=11, column=1, padx=10, pady=10)
         # to do, dass presets funktionieren
 
+
 class Page13(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn", font=("Arial",15))
+        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn", font=("Arial", 15))
         label.grid(row=0, column=9)
 
         label_fehler = ttk.Label(self, text="Fehlermeldung-Box")
@@ -1250,8 +1253,6 @@ class Page13(tk.Frame):
 
         button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
         button1.grid(row=2, column=1, padx=10, pady=10)
-
-
 
 
 # Driver Code
