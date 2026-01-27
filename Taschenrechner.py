@@ -1,4 +1,5 @@
 import inspect
+import time
 
 import numpy as np
 from tkinter import *
@@ -535,7 +536,7 @@ class tkinterApp(tk.Tk):
         # iterating through a tuple consisting
         # of the different page layouts
         for F in (
-        StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12, Page13):
+        StartPage, Page1, Page2, Page3, Page4, Page5, Page6, Page7, Page8, Page9, Page10, Page11, Page12):
             frame = F(container, self)
 
             # initializing frame of that object from
@@ -1067,8 +1068,7 @@ class Page11(tk.Frame):
             anzeige_res_fb = tk.Text(self, height=1, width=10, bg="light cyan")
             anzeige_res_fb.grid(row=4, column=1 + col_fb, padx=10, sticky="w")
 
-            anzeige_res_fb.bind("<Return>", self.berechne_und_plotte_fb)
-            anzeige_res_fb.bind("<FocusOut>", self.berechne_und_plotte_fb)
+            anzeige_res_fb.bind("<KeyRelease>", self.berechne_und_plotte_fb)
 
             self.felder_dic_fb.update({labels_fb[col_fb - 1]: anzeige_res_fb})
 
@@ -1102,8 +1102,8 @@ class Page11(tk.Frame):
             anzeige_res_sp.grid(row=6 if col_sp < 7 else 8, column=(1 + col_sp) if col_sp < 7 else 2,
                                 padx=10, sticky="w")
 
-            anzeige_res_sp.bind("<Return>", self.berechne_und_plotte_sp)
-            anzeige_res_sp.bind("<FocusOut>", self.berechne_und_plotte_sp)
+            anzeige_res_sp.bind("<KeyRelease>", self.berechne_und_plotte_sp)
+
 
             self.felder_dic_sp.update({labels_sp[col_sp - 1]: anzeige_res_sp})
 
@@ -1141,8 +1141,10 @@ class Page11(tk.Frame):
         self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
         self.toolbar_2.update()
 
+
     def berechne_und_plotte_fb(self, event=None):
         werte_fb = {}
+
 
         for key, widget in self.felder_dic_fb.items():
             text = widget.get("1.0", "end-1c").strip()
@@ -1236,24 +1238,6 @@ class Page12(tk.Frame):
         select_knopf = ttk.Button(self, text="auswählen", command=selected_item)
         select_knopf.grid(row=11, column=1, padx=10, pady=10)
         # to do, dass presets funktionieren
-
-
-class Page13(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-
-        label = ttk.Label(self, text="Beschleunigte Kugeln aus Spulen und deren Flugbahn", font=("Arial", 15))
-        label.grid(row=0, column=9)
-
-        label_fehler = ttk.Label(self, text="Fehlermeldung-Box")
-        label_fehler.grid(row=2, column=2, padx=10, pady=10, sticky="w")
-        self.anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
-        self.anzeige_fehler.grid(row=2, column=3)
-
-        button1 = ttk.Button(self, text="zurück", command=lambda: controller.show_frame(Page11))
-        button1.grid(row=2, column=1, padx=10, pady=10)
-
 
 # Driver Code
 app = tkinterApp()
