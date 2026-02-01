@@ -1062,6 +1062,7 @@ class Page11(tk.Frame):
         labels_sp = ["r_kugel", "u_relativ", "N_windungen", "I", "r_spule", "Länge", "Masse"]
         self.felder_dic_fb = {}
 
+        # entry-felder für die Flugbahn
         for col_fb in range(1, 7):
             bezeichnung_fb = tk.Label(self, text=labels_fb[col_fb - 1])
             bezeichnung_fb.grid(row=3, column=1 + col_fb, padx=10, pady=10, sticky="w")
@@ -1080,20 +1081,9 @@ class Page11(tk.Frame):
         preset_button = ttk.Button(self, text="presets", command=lambda: controller.show_frame(Page12))
         preset_button.grid(row=2, column=1, padx=10, pady=10)
 
-        def clear():
-            for name_fb, name_sp in zip(labels_fb, labels_sp):
-                self.felder_dic_fb[name_fb].delete("1.0", END)
-                self.felder_dic_sp[name_sp].delete("1.0", END)
-
-            self.anzeige_fehler.delete("1.0", END)
-
-        clear_button = ttk.Button(self, text="clear", command=clear)
-        clear_button.grid(row=1, column=6, padx=10, pady=10)
-
         self.felder_dic_sp = {}
 
-        # entry-felder
-
+        # entry-felder für die Spule
         for col_sp in range(1, 8):
             bezeichnung_sp = tk.Label(self, text=labels_sp[col_sp - 1])
             bezeichnung_sp.grid(row=5 if col_sp < 7 else 7, column=(1 + col_sp) if col_sp < 7 else 2,
@@ -1102,8 +1092,7 @@ class Page11(tk.Frame):
             anzeige_res_sp.grid(row=6 if col_sp < 7 else 8, column=(1 + col_sp) if col_sp < 7 else 2,
                                 padx=10, sticky="w")
 
-            anzeige_res_sp.bind("<KeyRelease>", self.berechne_und_plotte_sp)
-
+            anzeige_res_sp.bind("<FocusOut>", self.berechne_und_plotte_sp)
 
             self.felder_dic_sp.update({labels_sp[col_sp - 1]: anzeige_res_sp})
 
@@ -1141,10 +1130,19 @@ class Page11(tk.Frame):
         self.toolbar_2 = NavigationToolbar2Tk(self.canvas_2, self.plot_frame_2)
         self.toolbar_2.update()
 
+        def clear():
+            for name_fb in labels_fb:
+                self.felder_dic_fb[name_fb].delete("1.0", END)
+            for name_sp in labels_sp:
+                self.felder_dic_sp[name_sp].delete("1.0", END)
+            self.fig_2.clear()
+            self.anzeige_fehler.delete("1.0", END)
+
+        clear_button = ttk.Button(self, text="clear", command=clear)
+        clear_button.grid(row=1, column=6, padx=10, pady=10)
 
     def berechne_und_plotte_fb(self, event=None):
         werte_fb = {}
-
 
         for key, widget in self.felder_dic_fb.items():
             text = widget.get("1.0", "end-1c").strip()
