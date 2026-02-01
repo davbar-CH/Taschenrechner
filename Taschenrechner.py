@@ -1068,7 +1068,7 @@ class Page11(tk.Frame):
             anzeige_res_fb = tk.Text(self, height=1, width=10, bg="light cyan")
             anzeige_res_fb.grid(row=4, column=1 + col_fb, padx=10, sticky="w")
 
-            anzeige_res_fb.bind("<KeyRelease>", self.berechne_und_plotte_fb)
+            anzeige_res_fb.bind("<FocusOut>", self.berechne_und_plotte_fb)
 
             self.felder_dic_fb.update({labels_fb[col_fb - 1]: anzeige_res_fb})
 
@@ -1182,8 +1182,8 @@ class Page11(tk.Frame):
         funktion_expr_sympy = sympy.sympify(funktion_expr)
         print(funktion_expr_sympy)
         x = Symbol("x")
-        f = lambdify(x, funktion_expr_sympy, 'numpy')
 
+        f = lambdify(x, funktion_expr_sympy, 'numpy')
         x_vals = np.linspace(anfang, ende, 400)
 
         try:
