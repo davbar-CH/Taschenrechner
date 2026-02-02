@@ -368,7 +368,7 @@ def vektorgeometrie(values, float_values, anzeige, befehl):
                 anzeige.insert(END, f"{name} ist {wert}\n")
 
 
-def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
+def spulen_beschleunigung(werte, felder_dic):
     r_kugel = (werte["r_kugel"], "r_kugel")
     u_permea_vakuum = 1.256637061 * (10 ** -6)
     u_relativ = (werte["u_relativ"], "u_relativ")
@@ -390,100 +390,62 @@ def spulen_beschleunigung(werte, anzeige_fehler, felder_dic):
     schritt = 0.1
     beschleunigung_liste = []
     zeit = 0
+    geschwindigkeit_final = 0
+
     if m[0] is not None:
         for x_werte in np.arange((-l[0] / 2), 0, schritt):
             kraft_an_x = f_l.subs(x, x_werte)
             beschleunigung = kraft_an_x / m[0]
             zeit = zeit + schritt
-            geschwindigkeit = beschleunigung * zeit
+            geschwindigkeit_x = beschleunigung * zeit
+            geschwindigkeit_final = geschwindigkeit_final + geschwindigkeit_x
 
-            
-    return f_l
+    return f_l, geschwindigkeit_final
 
-
-def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
+def flugbahn_ohne_widerstand(werte, felder_dic):
     # labels = ["Anfangshöhe", "Anfangsgeschwindigkeit", "Abwurfwinkel", "Flugzeit", "Distanz", "maximale Höhe"]
+    felder_dic["R"].delete(1.0, END)
+    felder_dic["t"].delete(1.0, END)
+    felder_dic["h_max"].delete(1.0, END)
     g = 9.80665
 
     h = (werte["h"], "h")
     v0 = (werte["v0"], "v0")
     a = (werte["a"], "a")
-    t = (werte["t"], "t")
-    R = (werte["R"], "R")
-    h_max = (werte["h_max"], "h_max")
 
     pflicht_param_list = [h[0], v0[0], a[0]]
-    optional_param_list = [t[0], R[0], h_max[0]]
-    alle_param_list = [h, v0, a, t, R, h_max]
 
     # flugzeit od. reichweite aus dem Stand ist einfach die lange Form mit h = 0
-    def flugzeit(v0, a, g, h, t):
+    def flugzeit(v0, a, g, h):
         a = np.deg2rad(a)
         x = v0 * np.sin(a)
-        return ((x + np.sqrt(x ** 2 + (2 * g * h))) / g) - t
+        return (x + np.sqrt(x ** 2 + (2 * g * h))) / g, "t"
 
-    def reichweite(v0, a, g, h, R):
-        t = flugzeit(v0, a, g, h, 0)
+    def reichweite(v0, a, g, h):
+        t, flugzeit_name = flugzeit(v0, a, g, h)
         a = np.deg2rad(a)
-        return (v0 * np.cos(a) * t) - R
+        return v0 * np.cos(a) * t, "R"
 
-    def maximale_hoehe(v0, a, g, h, h_max):
+    def maximale_hoehe(v0, a, g, h):
         a = np.deg2rad(a)
-        return (h + (v0 ** 2 * np.sin(a) ** 2) / (2 * g)) - h_max
-
-    def solve(f, args):
-        i = args.index(None)
-        sig = inspect.signature(f)
-        param_name = list(sig.parameters.keys())[i]
-        return scipy.optimize.fsolve(lambda x: f(*args[:i], x, *args[i + 1:]), 1), param_name
-
-    optionale_werte = {
-        "t": t,
-        "R": R,
-        "h_max": h_max,
-    }
-
-    optionale_formeln = {
-        "t": flugzeit,
-        "R": reichweite,
-        "h_max": maximale_hoehe,
-    }
+        return h + (v0 ** 2 * np.sin(a) ** 2) / (2 * g), "h_max"
 
     fehlende_pflicht = pflicht_param_list.count(None)
-    fehlende_optional = optional_param_list.count(None)
-    try:  # was, wenn ich keine parameter habe?
-        if (fehlende_pflicht >= 1 and fehlende_optional == 3) or (fehlende_pflicht == 2):
-            anzeige_fehler.insert(END, "Es fehlt ein Parameter: v0, a oder h")
 
+    try:  # was, wenn ich keine parameter habe?
         if fehlende_pflicht == 0:
             ergebnisse = [
-                solve(flugzeit, (v0[0], a[0], g, h[0], t[0])),
-                solve(reichweite, (v0[0], a[0], g, h[0], R[0])),
-                solve(maximale_hoehe, (v0[0], a[0], g, h[0], h_max[0]))
+                flugzeit(v0[0], a[0], g, h[0]),
+                reichweite (v0[0], a[0], g, h[0]),
+                maximale_hoehe(v0[0], a[0], g, h[0])
             ]
+            print(ergebnisse)
+            for resultat in ergebnisse:
+                print(f"{resultat[1]} berechnet: {resultat[0]}")
+                felder_dic[resultat[1]].insert(END, f"{resultat[0]}")
+                if resultat[1] == "R":
+                    werte.update({resultat[1]:resultat[0]})
 
-            for res, name in ergebnisse:
-                if name in werte:
-                    werte[name] = res
-                    print(f"{name} berechnet: {res[0]}")
-                    felder_dic[name].insert(END, f"{res[0]}")
-
-        if fehlende_pflicht == 1 and fehlende_optional < 3:
-            try:
-                for name, wert in optionale_werte.items():
-                    if wert[0] is not None:
-                        res, name = solve(optionale_formeln[name], (v0[0], a[0], g, h[0], wert[0]))
-
-                        for param_name in alle_param_list:
-                            if param_name[1] == name:
-                                werte[name] = res
-
-                        print(f"{name} berechnet: {res}")
-                        felder_dic[name].insert(END, f"{res[0]}")
-                        if RuntimeWarning:
-                            anzeige_fehler.insert(END, "Physikalisch nicht möglich, heieiei")
-            except RuntimeWarning:
-                anzeige_fehler.insert(END, "Physikalisch nicht möglich, heieiei")
 
     except Exception as e:
         print(f"Du hast Mist gebaut, David:{e}")
@@ -492,7 +454,6 @@ def flugbahn_ohne_widerstand(werte, anzeige_fehler, felder_dic):
     flugbahn_o_widerstand = ((-1) * g / (2 * (v0[0] ** 2) * (np.cos(a[0]) ** 2)) * x ** 2) + (np.tan(a[0]) * x) + h[0]
     reichweite = werte["R"]
     return flugbahn_o_widerstand, reichweite
-
 
 def flugbahn_mit_widerstand(werte):
     g = 9.80665
@@ -1073,11 +1034,6 @@ class Page11(tk.Frame):
 
             self.felder_dic_fb.update({labels_fb[col_fb - 1]: anzeige_res_fb})
 
-        fehler_box_label = ttk.Label(self, text="Fehlermeldung-Box")
-        fehler_box_label.grid(row=1, column=3, padx=10, pady=10)
-        self.anzeige_fehler = Text(self, height=2, width=20, bg="light cyan")
-        self.anzeige_fehler.grid(row=1, column=4)
-
         preset_button = ttk.Button(self, text="presets", command=lambda: controller.show_frame(Page12))
         preset_button.grid(row=2, column=1, padx=10, pady=10)
 
@@ -1136,7 +1092,6 @@ class Page11(tk.Frame):
             for name_sp in labels_sp:
                 self.felder_dic_sp[name_sp].delete("1.0", END)
             self.fig_2.clear()
-            self.anzeige_fehler.delete("1.0", END)
 
         clear_button = ttk.Button(self, text="clear", command=clear)
         clear_button.grid(row=1, column=6, padx=10, pady=10)
@@ -1148,7 +1103,7 @@ class Page11(tk.Frame):
             text = widget.get("1.0", "end-1c").strip()
             werte_fb[key] = float(text) if text else None
 
-        self.funk_fb_o_widerstand, reichweite = flugbahn_ohne_widerstand(werte_fb, self.anzeige_fehler,
+        self.funk_fb_o_widerstand, reichweite = flugbahn_ohne_widerstand(werte_fb,
                                                                          self.felder_dic_fb)
 
         if self.funk_fb_o_widerstand is not None:
@@ -1161,13 +1116,14 @@ class Page11(tk.Frame):
             text = widget.get("1.0", "end-1c").strip()
             werte_sp[key] = float(text) if text else None
 
-        self.funk_sp = spulen_beschleunigung(werte_sp, self.anzeige_fehler, self.felder_dic_sp)
+        self.funk_sp, muendung_geschwindigkeit = spulen_beschleunigung(werte_sp, self.felder_dic_sp)
+        print(muendung_geschwindigkeit)
 
         if self.funk_sp is not None:
             self.update_plot_sp()
 
-        # ---------- Automatisches Update ----------
 
+        # ---------- Automatisches Update ----------
     def update_plot_fb(self, ende):
         self.plot(self.ax_1, self.canvas_1, self.funk_fb_o_widerstand, 0, ende)
 
